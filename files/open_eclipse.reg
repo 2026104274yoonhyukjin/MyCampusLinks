@@ -1,0 +1,12 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\eclipse]
+@="URL:Eclipse Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\eclipse\shell]
+
+[HKEY_CLASSES_ROOT\eclipse\shell\open]
+
+[HKEY_CLASSES_ROOT\eclipse\shell\open\command]
+@="\"C:\\Users\\d803d\\eclipse\\java-2025-122\\eclipse\\eclipse.exe\" \"%1\""

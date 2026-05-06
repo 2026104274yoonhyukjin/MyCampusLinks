@@ -1,0 +1,12 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\marktext]
+@="URL:MarkText Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\marktext\shell]
+
+[HKEY_CLASSES_ROOT\marktext\shell\open]
+
+[HKEY_CLASSES_ROOT\marktext\shell\open\command]
+@="\"C:\\Users\\d803d\\AppData\\Local\\Programs\\MarkText\\MarkText.exe\" \"%1\""
