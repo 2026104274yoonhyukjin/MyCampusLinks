@@ -3,10 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusLinks</title>
+    <title>MyCampusLinks</title>
 </head>
 <body>
+
+    <h1 align="center">MyCampusLinks</h1>
+
+    <div style="text-align: center; margin: 30px;">
+    <a href="https://www.mjc.ac.kr/mjcIntro.do" target="_blank">
+        <img src="files/school-logo.png.png" alt="명지전문대학 로고" style="width: 300px; height: auto;">
+    </a>
+</div>
+
+<div class="card-container">
+    
+    <a href="https://youtube.com/@mjcollege1974?si=Nr4eqh-EzD1KBPoj" class="menu-card" target="_blank">
+        <div class="card-icon">  
+        <img src="files/youtube-icon.png.png" alt="YouTube" style="width: 50px; height: 50px;">
+    </div>
+    <h3>명지전문대학 유튜브</h3>
+    <p>명지전문대학 유튜브로 이동합니다!</p>
+</a>
+   
+    <a href="https://www.instagram.com/myongji_college?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="menu-card" target="_blank">
+     <div class="card-icon">  
+        <img src="files/instagram-icon.png.png" alt="Instagram" style="width: 50px; height: 45px;">
+    </div>
+    <h3>명지전문대학 인스타그램</h3>
+    <p>명지전문대학 인스타그램으로 이동합니다!</p>
+</a>
+
+<a href="https://cyber.mjc.ac.kr/home/mainHome/Form/myPage" class="menu-card" target="_blank">
+    <div class="card-icon">  
+        <img src="files/eclass-icon.png.png" alt="E-calss" style="width: 50px; height: 50px;">
+    </div>
+    <h3>원격강좌/E-Class</h3>
+    <p>원격강좌/재택수업 사이트로 이동합니다!</p>
+</a>
+
+<a href="https://mjc.factchat.bot/dashboard/chat/" class="menu-card" target="_blank">
+    <div class="card-icon">  
+        <img src="files/factchat-icon.png.png" alt="FactChat" style="width: 50px; height: 50px;">
+    </div>
+    <h3>AI검색(FactChat)</h3>
+    <p>멀티LLM 플랫폼(FactChat)으로 이동합니다.</p>
+</a>
+
+<a href="https://icampus.mjc.ac.kr/mjc/main.do" class="menu-card" target="_blank">
+    <div class="card-icon">  
+        <img src="files/factchat-icon.png.png" alt="ICampus" style="width: 50px; height: 50px;">
+    </div>
+    <h3>ICampus</h3>
+    <p>ICampus로 이동합니다.</p>
+</a>
+
+</div>
  <style>
+   .card-container {
+    display: flex;           
+    flex-wrap: wrap;        
+    justify-content: center;  
+    gap: 20px;              
+    padding: 40px;           
+    max-width: 1200px;      
+    margin: 0 auto;          
+}
+
+    .menu-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 180px;
+    background-color: white; 
+    border-radius: 15px;
+    text-decoration: none;
+    color: black; 
+    transition: all 0.3s ease; 
+    box-shadow: 0 4px 10px black;
+    border: 1px solid white;
+}
+
+
+.menu-card:hover {
+    background-color: blue; 
+    color: white; 
+    transform: translateY(-8px); 
+    box-shadow: 0 10px 20px rgba(0, 122, 204, 0.3); 
+}
+
+
+.menu-card:hover p {
+    color: white;
+    opacity: 0.9;
+}
+
     .btn-link {
         display: inline-block;
         padding: 12px 24px;
@@ -23,7 +115,7 @@
     .btn-vscode {
     display: inline-block;
     padding: 12px 20px;
-    background-color: #0078d4; 
+    background-color: #2D3E50; 
     color: white;
     text-decoration: none;
     border-radius: 5px;
@@ -33,7 +125,7 @@
 }
 
 .btn-vscode:hover {
-    background-color: #005a9e; 
+    background-color:#1A252F; 
 }
 
 .btn-eclipse {
@@ -53,8 +145,7 @@
 }
 </style>
 
-    <h1 align="center">명지전문대학교 AI게임 소프트웨어학과</h1> 
-<h2 align="center">CampusLinks</h2>
+    <h2 align="center">명지전문대학교 AI게임 소프트웨어학과</h1> 
 
  <fieldset>
 <h3>게임프로그래밍</h3>
@@ -73,14 +164,30 @@
 </fieldset>
 
  </fieldset>
+<p></p>
 
  <fieldset>
+<h3>게임그래픽기초</h3>
+
+<fieldset>
+
+<a href="https://youtube.com/playlist?list=PLXF9JbBfmnHHejKD9FNEcFzrjPmEG0YOQ&si=bOx88b-8A3HPAuEO"class="btn-link" target="_blank"> 📺수업 영상 자료 </a>
+ </fieldset>
+
+
+ </fieldset>
+<p></p>
+
+<fieldset>
 <h3>객체지향프로그래밍</h3>
 
 <fieldset>
-<a href="eclipse://" class="btn-eclipse"> 💻내 컴퓨터의 Eclipse 실행 </a>
+<a href="eclipse://" class="btn-eclipse"> Eclipse IDE </a>
 </fieldset>
 
+<p></p>
+
+<fieldset>
 <a href="./files/Java_프로그래밍_1주차_강의노트.pdf"class="btn-link" target="_blank"> 📁 1주차 강의 자료 </a>
 
 <a href="./files/2장_자료형.pdf" class="btn-link" target="_blank"> 📁 2장 자료형-배열 </a>
@@ -92,53 +199,57 @@
 <a href="./files/5장_참조자료형.pdf" class="btn-link" target="_blank"> 📁 5장 참고자료형</a>
 
 <a href="./files/메서드.pdf" class="btn-link" target="_blank"> 📁 메서드 </a>
- </fieldset>
+</fieldset>
+
+
+</fieldset>
+<p></p>
 
  <fieldset>
 <h3>프론트엔드프로그래밍</h3>
 
- <fieldset>
+<fieldset>
     
     <fieldset>
-        
-        <a href="vscode://" class="btn-vscode">💻 VS Code 앱 실행</a>
-        <a href="https://vscode.dev" target="_blank" class="btn-vscode">🌐 웹에서 실행</a>
+        <a href="vscode://" class="btn-vscode">
+        <img src="files/vscode-icon.png.png" width="40" style="vertical-align: middle; margin-right: 8px;"> VS Code 앱 </a>
+        <a href="https://vscode.dev" target="_blank" class="btn-vscode">
+        <img src="files/vscode-icon.png.png" width="40" style="vertical-align: middle; margin-right: 8px;"> VS Code 웹페이지 </a>
+         
+        <a href="https://quizn.show/quz/pin/gamePinForm.do"target="_blank" class="btn-vscode">
+        <img src="files/quizn-icon.png.png" width="45" style="vertical-align: middle; margin-right: 8px;"> QuizN </a>
+    
+       <a href="marktext://" class="btn-link">
+    <img src="files/marktext-icon.png.png" width="40" style="vertical-align: middle; margin-right: 8px;"> MarkText </a>
+
+    <a href="https://github.com/"class="btn-vscode" target="_blank">
+    <img src="files/github-icon.png.png" width="30" style="vertical-align: middle; margin-right: 8px;"> GitHub </a>
+    
     </fieldset>
     
+    <p></p>
+
 <fieldset>
 <h4>수업 자료</h4>
 <a href="https://dayoung-univ.github.io/Frontend2026-01/OT"class="btn-link" target="_blank"> 📁 OT 자료 </a>
 
-<a href="po-coedit:///?fi=10102542273821&dt=.pdf&co=3&st=0"class="btn-link" target="_blank">
-    📁 마크다운 작성방법 참고자료
-</a>
+<a href="./files/마크다운_보충자료.pdf"class="btn-link" target="_blank"> 📁 마크다운 작성방법 참고자료 </a>
 
-<a href="https://dayoung-univ.github.io/Frontend2026-01/week3"class="btn-link" target="_blank">
-    📁 3주차 수업 자료-HTML Form & UI 기획
-</a>
+<a href="https://dayoung-univ.github.io/Frontend2026-01/week3"class="btn-link" target="_blank"> 📁 3주차 수업 자료-HTML Form & UI 기획 </a>
 
-<a href="https://dayoung-univ.github.io/Frontend2026-01/week4"class="btn-link" target="_blank">
-    📁 4주차 수업 자료-CSS 스타일링 & GitHub 배포
-</a>
+<a href="https://dayoung-univ.github.io/Frontend2026-01/week4"class="btn-link" target="_blank"> 📁 4주차 수업 자료-CSS 스타일링 & GitHub 배포 </a>
 
-<a href="https://dayoung-univ.github.io/Frontend2026-01/week5"class="btn-link" target="_blank">
-    📁 5주차 수업 자료-CSS Layout & 팀 협업
-</a>
+<a href="https://dayoung-univ.github.io/Frontend2026-01/week5"class="btn-link" target="_blank"> 📁 5주차 수업 자료-CSS Layout & 팀 협업 </a>
 
-<a href="https://dayoung-univ.github.io/Frontend2026-01/week6"class="btn-link" target="_blank">
-    📁 6주차 수업 자료-Flexbox & 반응형 웹
-</a>
+<a href="https://dayoung-univ.github.io/Frontend2026-01/week6"class="btn-link" target="_blank"> 📁 6주차 수업 자료-Flexbox & 반응형 웹 </a>
     
-<a href="https://dayoung-univ.github.io/Frontend2026-01/week7"class="btn-link" target="_blank">
-    📁 7주차 수업 자료-웹 디자인의 완성
-</a>
+<a href="https://dayoung-univ.github.io/Frontend2026-01/week7"class="btn-link" target="_blank"> 📁 7주차 수업 자료-웹 디자인의 완성 </a>
 
-<a href="./files/프론트엔드 기말 프로젝트 (103).pdf"class="btn-link" target="_blank">
-📁 프론트엔드 기말 프로젝트
-</a>
+<a href="./files/프론트엔드 기말 프로젝트 (103).pdf"class="btn-link" target="_blank"> 📁 프론트엔드 기말 프로젝트 </a>
 </fieldset>
 
-<fieldset>
+<p></p>
+
     <h4>QuizN 복습 링크</h4>
 <a href="https://quizn.show/quz/play/tryPinForm.do?showSeq=589372"class="btn-link" target="_blank">
     📁 1주차 복습 Web은 어떻게 움직일까?
@@ -169,8 +280,6 @@
 </a>
 
 </fieldset>
-
- </fieldset>
 
 </body>
 </html>
