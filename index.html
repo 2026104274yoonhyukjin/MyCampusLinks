@@ -298,9 +298,9 @@
 
       <div id="communityBoardSection" class="flex flex-col gap-5">
         <div class="bg-surface-c-lowest border border-ol-variant rounded-xl p-4 flex flex-col gap-3 shadow-sm">
-          <textarea id="communityPostInput" rows="3" placeholder="비속어나 욕설은 유해성 검사를 통해 자동 치환(🍎)됩니다. 배려있는 글을 작성해 주세요!" class="w-full px-4 py-2.5 text-[14px] rounded border border-ol-variant bg-surface-c-low text-on-surface focus:outline-none focus:border-primary resize-none"></textarea>
+          <textarea id="communityPostInput" rows="3" placeholder="서로 배려하는 마음으로 글을 작성해 주세요. (초성 욕설, 비속어, 성희롱 등은 글 등록이 원천 차단됩니다)" class="w-full px-4 py-2.5 text-[14px] rounded border border-ol-variant bg-surface-c-low text-on-surface focus:outline-none focus:border-primary resize-none"></textarea>
           <div class="flex justify-between items-center">
-            <span class="text-[11px] text-on-surface-variant">💡 내가 작성한 글은 실시간 수정/삭제가 가능합니다.</span>
+            <span class="text-[11px] text-on-surface-variant">💡 내가 작성한 글만 수정 및 삭제가 가능합니다.</span>
             <button onclick="submitCommunityPost()" class="px-5 py-2 text-[13px] font-bold rounded-lg bg-primary text-white hover:opacity-90 transition shadow-sm">
               광장에 글 올리기
             </button>
@@ -311,7 +311,6 @@
 
       <div id="communityReviewSection" class="flex flex-col gap-6 hidden">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
           <div class="bg-surface-c-lowest border border-ol-variant rounded-xl p-5 flex flex-col gap-4 shadow-sm h-fit">
             <h3 class="text-[15px] font-bold text-primary border-b border-ol-variant pb-2">✏️ 별점 평가 및 리뷰 남기기</h3>
             <div>
@@ -346,7 +345,6 @@
             </div>
             <div id="lectureReviewList" class="flex flex-col gap-3"></div>
           </div>
-
         </div>
       </div>
     </div>
@@ -455,11 +453,29 @@
   </div>
 
   <script>
-    // ----------------------------------------------------------------------------------
-    // 커뮤니티 욕설 필터링 및 관리자 연동 설정 변수
-    // ----------------------------------------------------------------------------------
-    const BAD_WORDS = ['시발', '씨발', '개새끼', '존나', '병신', '지랄', '뻐큐', 'fuck', '새끼', '느금', '미친년', '미친놈', '좆', '새키'];
-    const ADMIN_EMAIL = 'admin@mjc.ac.kr'; // 💡 본인의 관리자용 로그인 이메일로 수정하시면 됩니다!
+    const ADMIN_EMAIL = 'admin@mjc.ac.kr'; // 관리자 계정 이메일
+
+    // 🍎 [추가] 촘촘하고 강력한 초성 및 비속어 원천 차단 필터
+    function validateContent(text) {
+      const bannedWords = [
+        "ㅅㅂ", "ㅗ", "ㅅㅅ", "ㅄ", "ㅂㅅ", "ㄲㅈ", "ㅈㄹ", "ㅁㅊ",
+        "시발", "씨발", "개새끼", "존나", "병신", "지랄", "뻐큐", "fuck", 
+        "새끼", "느금마", "미친년", "미친놈", "좆", "새키", "씨팔", "썅", 
+        "개년", "씹", "애미", "애비", "창녀",
+        "섹스", "자지", "보지", "한남", "김치녀", "맘충", "틀딱", "재기해"
+      ];
+      
+      // 악의적인 띄어쓰기(예: "시 발") 방지를 위해 공백을 모두 제거한 문자열도 검사
+      const cleanedText = text.replace(/\s+/g, "");
+
+      for (let i = 0; i < bannedWords.length; i++) {
+        if (text.includes(bannedWords[i]) || cleanedText.includes(bannedWords[i])) {
+          alert("⚠️ 알림: 비속어, 초성 욕설, 성희롱 등 커뮤니티 가이드라인에 위배되는 단어가 포함되어 글 등록이 차단되었습니다.");
+          return false;
+        }
+      }
+      return true;
+    }
 
     let currentUser = null;
     let subjects = [];
@@ -467,7 +483,6 @@
     let ddayList = [];
     let personalEvents = [];
 
-    // 기본 탑재 고정형 데이터 세트
     const defaultSubjects = ["게임그래픽 기초", "프론트엔드프로그래밍"];
     const defaultData = [
       { id: 1, title: "1주차 1차시-OT", week: "1주차", subject: "게임그래픽 기초", link: "https://youtu.be/3M7TzI9b-wY" },
@@ -477,20 +492,6 @@
       { id: 32, title: "2주차 수업 자료-HTML5 시맨틱 마크업 원리", week: "2주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week2" }
     ];
     const defaultDDayList = [{ id: 1001, title: "기말고사 및 종강", date: "2026-06-15" }];
-
-    // 실시간 비속어 분석 및 검열 함수
-    function checkAndFilterText(text) {
-      let isBad = false;
-      let filtered = text;
-      BAD_WORDS.forEach(word => {
-        if (text.includes(word)) {
-          isBad = true;
-          const regex = new RegExp(word, 'gi');
-          filtered = filtered.replace(regex, '🍎'.repeat(word.length));
-        }
-      });
-      return { isBad, filtered };
-    }
 
     // Auth 인증 상태 변화 실시간 감시자
     auth.onAuthStateChanged(user => {
@@ -509,21 +510,15 @@
         database.ref('users/' + user.uid).once('value').then(snapshot => {
           const val = snapshot.val();
           if(val) {
-            subjects = val.subjects || [];
-            data = val.data || [];
-            ddayList = val.ddayList || [];
-            personalEvents = val.personalEvents || [];
+            subjects = val.subjects || []; data = val.data || [];
+            ddayList = val.ddayList || []; personalEvents = val.personalEvents || [];
           } else {
-            subjects = [...defaultSubjects];
-            data = [...defaultData];
-            ddayList = [...defaultDDayList];
-            personalEvents = [];
+            subjects = [...defaultSubjects]; data = [...defaultData];
+            ddayList = [...defaultDDayList]; personalEvents = [];
             saveCurrentStateToFirebase();
           }
-          updateSidebarSubjects();
-          renderDDayList();
-          render(currentMode);
-          initGlobalCommunityListeners(); // 커뮤니티 실시간 수신기 동시 가동
+          updateSidebarSubjects(); renderDDayList(); render(currentMode);
+          initGlobalCommunityListeners();
         });
       } else {
         currentUser = null;
@@ -533,23 +528,24 @@
       }
     });
 
-    // 글로벌 통합 커뮤니티 실시간 데이터 파이프라인
+    // ----------------------------------------------------------------------------------
+    // 커뮤니티 데이터 제어 (비속어 원천 차단 및 본인만 삭제)
+    // ----------------------------------------------------------------------------------
     function initGlobalCommunityListeners() {
-      // 1. 자유 게시판 피드 리스너
       database.ref('global_community').on('value', snapshot => {
         const container = document.getElementById('communityPostList');
-        if(!container) return;
-        container.innerHTML = '';
+        if(!container) return; container.innerHTML = '';
         const posts = snapshot.val();
         if(!posts) {
           container.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-10 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl">캠퍼스 광장이 비어있습니다. 첫 글을 등록해보세요! 🚀</p>`;
           return;
         }
 
-        // 최신순 정렬 정렬
         const sortedKeys = Object.keys(posts).sort((a,b) => posts[b].timestamp - posts[a].timestamp);
         sortedKeys.forEach(key => {
           const post = posts[key];
+          
+          // ✨ [권한 부여] 작성한 사람만 수정/삭제 가능
           const isAuthor = currentUser && currentUser.uid === post.uid;
           const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
           
@@ -557,13 +553,9 @@
           if(isAuthor) {
             actions = `
               <button onclick="editCommunityPost('${key}', \`${post.content.replace(/`/g, '\\`').replace(/\\/g, '\\\\')}\`)" class="text-[11px] text-primary hover:underline font-semibold">수정</button>
-              <button onclick="deleteCommunityPost('${key}')" class="text-[11px] text-error hover:underline font-semibold ml-2">삭제</button>
-            `;
-          } else if(isAdmin) {
-            actions = `
-              <span class="text-[11px] font-bold text-red-500 mr-2 bg-red-100 px-1.5 py-0.5 rounded">관리자 제재</span>
-              <button onclick="deleteCommunityPost('${key}')" class="text-[11px] text-error font-bold hover:underline">강제 삭제 🗑️</button>
-            `;
+              <button onclick="deleteCommunityPost('${key}')" class="text-[11px] text-error hover:underline font-semibold ml-2">삭제</button>`;
+          } else if (isAdmin) {
+            actions = `<button onclick="deleteCommunityPost('${key}')" class="text-[11px] text-error font-bold hover:underline">강제 삭제 🗑️</button>`;
           }
 
           const timeStr = new Date(post.timestamp).toLocaleString();
@@ -577,25 +569,18 @@
                 <div>${actions}</div>
               </div>
               <p class="text-[14px] text-on-surface font-medium whitespace-pre-wrap leading-relaxed mt-0.5">${post.content}</p>
-            </div>
-          `;
+            </div>`;
         });
       });
 
-      // 2. 강의평가 별점 리스너
       database.ref('global_reviews').on('value', snapshot => {
         const listContainer = document.getElementById('lectureReviewList');
         const summaryContainer = document.getElementById('subjectRatingSummary');
         if(!listContainer || !summaryContainer) return;
 
-        listContainer.innerHTML = '';
-        summaryContainer.innerHTML = '';
-
+        listContainer.innerHTML = ''; summaryContainer.innerHTML = '';
         const reviews = snapshot.val();
-        
-        // 실시간 과목별 누적 평점 통계 오브젝트 빌드
-        const scores = {};
-        subjects.forEach(sub => scores[sub] = { total: 0, count: 0 });
+        const scores = {}; subjects.forEach(sub => scores[sub] = { total: 0, count: 0 });
 
         if(!reviews) {
           listContainer.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-10 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl">과목 강의평가가 존재하지 않습니다. 첫 평가를 남겨보세요! ⭐️</p>`;
@@ -613,15 +598,18 @@
         sortedKeys.forEach(key => {
           const rev = reviews[key];
           if(scores[rev.subject]) {
-            scores[rev.subject].total += Number(rev.rating);
-            scores[rev.subject].count += 1;
+            scores[rev.subject].total += Number(rev.rating); scores[rev.subject].count += 1;
           }
 
+          // ✨ [권한 부여] 작성한 사람만 리뷰 삭제 가능
           const isAuthor = currentUser && currentUser.uid === rev.uid;
           const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+          
           let deleteBtn = "";
-          if(isAuthor || isAdmin) {
-            deleteBtn = `<button onclick="deleteLectureReview('${key}')" class="text-[11px] text-error hover:underline font-bold shrink-0">${isAdmin ? '강제 삭제 🗑️' : '삭제'}</button>`;
+          if(isAuthor) {
+            deleteBtn = `<button onclick="deleteLectureReview('${key}')" class="text-[11px] text-error hover:underline font-bold shrink-0">삭제</button>`;
+          } else if (isAdmin) {
+            deleteBtn = `<button onclick="deleteLectureReview('${key}')" class="text-[11px] text-error hover:underline font-bold shrink-0">강제 삭제 🗑️</button>`;
           }
 
           const stars = "★".repeat(rev.rating) + "☆".repeat(5 - rev.rating);
@@ -636,11 +624,9 @@
                 <p class="text-[13px] text-on-surface font-medium break-words mt-1">${rev.reviewText}</p>
               </div>
               ${deleteBtn}
-            </div>
-          `;
+            </div>`;
         });
 
-        // 종합 요약 패널 갱신
         subjects.forEach(sub => {
           const matched = scores[sub];
           const avgScore = matched && matched.count > 0 ? (matched.total / matched.count).toFixed(1) : "평가 없음";
@@ -649,244 +635,161 @@
             <div class="flex justify-between items-center bg-surface-c-lowest border border-ol-variant/60 rounded-lg p-2.5">
               <span class="font-semibold text-on-surface truncate max-w-[140px]">${sub}</span>
               <span class="text-amber-500 font-bold shrink-0">${starsText} <span class="text-on-surface-variant font-medium text-[11px]">(${avgScore})</span></span>
-            </div>
-          `;
+            </div>`;
         });
       });
     }
 
-    // 커뮤니티 전용 탭 토글 시스템
     function switchCommunityTab(tab) {
-      const bSec = document.getElementById('communityBoardSection');
-      const rSec = document.getElementById('communityReviewSection');
-      const bBtn = document.getElementById('tabBtnBoard');
-      const rBtn = document.getElementById('tabBtnReview');
-      
+      const bSec = document.getElementById('communityBoardSection'); const rSec = document.getElementById('communityReviewSection');
+      const bBtn = document.getElementById('tabBtnBoard'); const rBtn = document.getElementById('tabBtnReview');
       if(tab === 'board') {
-        bSec.classList.remove('hidden');
-        rSec.classList.add('hidden');
+        bSec.classList.remove('hidden'); rSec.classList.add('hidden');
         bBtn.className = "px-4 py-1.5 text-[13px] font-bold rounded-md bg-primary text-white transition-all shadow-sm";
         rBtn.className = "px-4 py-1.5 text-[13px] font-bold rounded-md text-on-surface-variant hover:text-on-surface transition-all";
       } else {
-        bSec.classList.add('hidden');
-        rSec.classList.remove('hidden');
+        bSec.classList.add('hidden'); rSec.classList.remove('hidden');
         rBtn.className = "px-4 py-1.5 text-[13px] font-bold rounded-md bg-primary text-white transition-all shadow-sm";
         bBtn.className = "px-4 py-1.5 text-[13px] font-bold rounded-md text-on-surface-variant hover:text-on-surface transition-all";
-        
-        // 강의평가 드롭다운 선택상자 빌드
-        const select = document.getElementById('reviewSubjectSelect');
-        select.innerHTML = '';
+        const select = document.getElementById('reviewSubjectSelect'); select.innerHTML = '';
         subjects.forEach(s => select.innerHTML += `<option value="${s}">${s}</option>`);
       }
     }
 
-    // 별점 평가 클릭 매핑 인터랙션
     function setStarRating(rating) {
       document.getElementById('reviewRatingValue').value = rating;
       document.getElementById('reviewRatingText').innerText = `${rating}.0 / 5.0`;
-      const stars = document.querySelectorAll('.star-icon');
-      stars.forEach((star, idx) => {
-        if(idx < rating) {
-          star.classList.add('text-amber-500');
-          star.classList.remove('opacity-30');
-        } else {
-          star.classList.remove('text-amber-500');
-          star.classList.add('opacity-30');
-        }
+      document.querySelectorAll('.star-icon').forEach((star, idx) => {
+        if(idx < rating) { star.classList.add('text-amber-500'); star.classList.remove('opacity-30'); } 
+        else { star.classList.remove('text-amber-500'); star.classList.add('opacity-30'); }
       });
     }
 
-    // 자유 소통 피드 등록하기
+    // 커뮤니티 글 등록
     function submitCommunityPost() {
       const input = document.getElementById('communityPostInput');
       if(!input || !input.value.trim()) return;
+      const content = input.value.trim();
 
-      const filter = checkAndFilterText(input.value.trim());
-      if(filter.isBad) {
-        alert("⚠️ 경고: 게시 내용에 비속어가 감지되어 깨끗한 이모지(🍎)로 자동 정화 후 업로드됩니다.");
-      }
+      if (!validateContent(content)) return; // 비속어 검증 통과 못하면 등록 중단
 
       const nickname = (currentUser && currentUser.displayName) || currentUser.email.split('@')[0] + ' 학우';
-      const postPayload = {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        nickname: nickname,
-        content: filter.filtered,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      };
-
-      database.ref('global_community').push(postPayload).then(() => {
-        input.value = '';
-      }).catch(e => alert(e.message));
+      database.ref('global_community').push({
+        uid: currentUser.uid, email: currentUser.email, nickname: nickname, content: content, timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => { input.value = ''; }).catch(e => alert(e.message));
     }
 
-    // 내 글 수정 액션 트리거
+    // 커뮤니티 글 수정
     function editCommunityPost(key, oldContent) {
       const edited = prompt("글 내용을 수정해 주세요:", oldContent);
       if(edited === null) return;
-      if(!edited.trim()) { alert("공백은 등록 불가합니다."); return; }
+      const finalEdited = edited.trim();
+      if(!finalEdited) { alert("공백은 등록 불가합니다."); return; }
 
-      const filter = checkAndFilterText(edited.trim());
-      if(filter.isBad) {
-        alert("⚠️ 경고: 수정 문구에 비속어가 감지되어 깨끗한 표현으로 대체됩니다.");
-      }
+      if (!validateContent(finalEdited)) return; // 수정 시에도 비속어 검증
 
       database.ref('global_community/' + key).update({
-        content: filter.filtered,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
+        content: finalEdited, timestamp: firebase.database.ServerValue.TIMESTAMP
       }).catch(e => alert(e.message));
     }
 
-    // 글 완전 삭제 (내 글 또는 관리자 권한)
+    // 커뮤니티 글 삭제
     function deleteCommunityPost(key) {
-      if(confirm("이 게시글을 피드에서 영구 삭제하시겠습니까?")) {
-        database.ref('global_community/' + key).remove().catch(e => alert(e.message));
-      }
+      if(confirm("이 게시글을 삭제하시겠습니까?")) database.ref('global_community/' + key).remove().catch(e => alert(e.message));
     }
 
-    // 강의평가 서브밋 액션
+    // 강의평가 등록
     function submitLectureReview() {
       const sub = document.getElementById('reviewSubjectSelect').value;
       const textInput = document.getElementById('reviewTextInput');
       const score = document.getElementById('reviewRatingValue').value;
 
       if(!textInput || !textInput.value.trim()) { alert("강의평 내용을 작성해 주세요."); return; }
+      const reviewText = textInput.value.trim();
 
-      const filter = checkAndFilterText(textInput.value.trim());
-      if(filter.isBad) {
-        alert("⚠️ 경고: 강의평 내 비속어가 감지되어 순화된 표현(🍎)으로 치환되어 등록됩니다.");
-      }
+      if (!validateContent(reviewText)) return; // 강의평 비속어 검증
 
       const nickname = (currentUser && currentUser.displayName) || currentUser.email.split('@')[0] + ' 학우';
-      const reviewPayload = {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        nickname: nickname,
-        subject: sub,
-        rating: parseInt(score),
-        reviewText: filter.filtered,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      };
-
-      database.ref('global_reviews').push(reviewPayload).then(() => {
-        textInput.value = '';
-        alert("⭐️ 소중한 한줄 강의평가 평점이 실시간 반영되었습니다.");
+      database.ref('global_reviews').push({
+        uid: currentUser.uid, email: currentUser.email, nickname: nickname, subject: sub, rating: parseInt(score), reviewText: reviewText, timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        textInput.value = ''; alert("⭐️ 강의평가가 등록되었습니다.");
       }).catch(e => alert(e.message));
     }
 
-    // 강의평 삭제 액션
     function deleteLectureReview(key) {
-      if(confirm("선택한 과목 강의평을 즉시 삭제할까요?")) {
-        database.ref('global_reviews/' + key).remove().catch(e => alert(e.message));
-      }
+      if(confirm("이 과목 강의평을 삭제하시겠습니까?")) database.ref('global_reviews/' + key).remove().catch(e => alert(e.message));
     }
 
     // ----------------------------------------------------------------------------------
-    // 핵심 비즈니스 로직 및 기존 API 연동 파트
+    // 대시보드 레이아웃(그리드) 및 기타 스크립트
     // ----------------------------------------------------------------------------------
-    let currentMode = 'subject';
-    let searchQuery = '';
-    let calDate = new Date();
-    let selectedDateStr = '';
+    let currentMode = 'subject'; let searchQuery = ''; let calDate = new Date(); let selectedDateStr = '';
 
     function saveCurrentStateToFirebase() {
       if (!currentUser) return;
-      database.ref('users/' + currentUser.uid).set({
-        subjects: subjects,
-        data: data,
-        ddayList: ddayList,
-        personalEvents: personalEvents
-      });
+      database.ref('users/' + currentUser.uid).set({ subjects: subjects, data: data, ddayList: ddayList, personalEvents: personalEvents });
     }
 
     function handleAuth() {
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value;
+      const email = document.getElementById('authEmail').value.trim(); const password = document.getElementById('authPassword').value;
       const nickname = document.getElementById('authNickname').value.trim();
       const isRegister = !document.getElementById('nicknameField').classList.contains('hidden');
 
       if (!email || !password) { alert('이메일과 비밀번호를 완벽히 입력하세요.'); return; }
-
       if (isRegister) {
         if(!nickname) { alert('사용할 닉네임을 꼭 지정해 주세요.'); return; }
         auth.createUserWithEmailAndPassword(email, password)
-          .then((cred) => {
-            return cred.user.updateProfile({ displayName: nickname });
-          })
-          .then(() => {
-            alert('회원가입이 완료되었습니다!');
-            toggleAuthMode();
-          })
+          .then((cred) => cred.user.updateProfile({ displayName: nickname }))
+          .then(() => { alert('회원가입 완료! 로그인 상태로 전환됩니다.'); })
           .catch(e => alert('가입 실패: ' + e.message));
       } else {
-        auth.signInWithEmailAndPassword(email, password)
-          .catch(e => alert('로그인 오류: ' + e.message));
+        auth.signInWithEmailAndPassword(email, password).catch(e => alert('로그인 오류: ' + e.message));
       }
     }
 
     function toggleAuthMode() {
-      const field = document.getElementById('nicknameField');
-      const title = document.getElementById('authSubtitle');
-      const pBtn = document.getElementById('authPrimaryBtn');
-      const tBtn = document.getElementById('authToggleBtn');
-
+      const field = document.getElementById('nicknameField'); const title = document.getElementById('authSubtitle');
+      const pBtn = document.getElementById('authPrimaryBtn'); const tBtn = document.getElementById('authToggleBtn');
       if (field.classList.contains('hidden')) {
-        field.classList.remove('hidden');
-        title.innerText = '필수 정보를 채워 신규 계정을 생성하세요.';
-        pBtn.innerText = '계정 가입완료하기';
-        tBtn.innerText = '이미 가입하셨나요? 로그인하러 가기';
+        field.classList.remove('hidden'); title.innerText = '필수 정보를 채워 신규 계정을 생성하세요.';
+        pBtn.innerText = '계정 가입완료하기'; tBtn.innerText = '이미 가입하셨나요? 로그인하러 가기';
       } else {
-        field.classList.add('hidden');
-        title.innerText = '서비스 이용을 위해 로그인해 주세요.';
-        pBtn.innerText = '로그인하기';
-        tBtn.innerText = '아직 계정이 없으신가요? 회원가입하기';
+        field.classList.add('hidden'); title.innerText = '서비스 이용을 위해 로그인해 주세요.';
+        pBtn.innerText = '로그인하기'; tBtn.innerText = '아직 계정이 없으신가요? 회원가입하기';
       }
     }
 
     function togglePasswordVisibility() {
-      const p = document.getElementById('authPassword');
-      const eye = document.getElementById('eyeIcon');
+      const p = document.getElementById('authPassword'); const eye = document.getElementById('eyeIcon');
       if(p.type === 'password') {
-        p.type = 'text';
-        eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.545 7.41 7.24 4.5 12 4.5c4.757 0 8.455 2.91 9.964 7.184a1.012 1.012 0 010 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />`;
+        p.type = 'text'; eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.545 7.41 7.24 4.5 12 4.5c4.757 0 8.455 2.91 9.964 7.184a1.012 1.012 0 010 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />`;
       } else {
-        p.type = 'password';
-        eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />`;
+        p.type = 'password'; eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />`;
       }
     }
-
-    function logout() {
-      if(confirm('안전하게 로그아웃할까요?')) auth.signOut();
-    }
+    function logout() { if(confirm('안전하게 로그아웃할까요?')) auth.signOut(); }
 
     function launchTarget(target) {
       if (!target) return;
       const cleanTarget = target.trim();
-      if (cleanTarget.startsWith('http://') || cleanTarget.startsWith('https://')) {
-        window.open(cleanTarget, '_blank'); return;
-      }
+      if (cleanTarget.startsWith('http://') || cleanTarget.startsWith('https://')) { window.open(cleanTarget, '_blank'); return; }
       if (cleanTarget.includes('://')) { window.location.href = cleanTarget; return; }
-      
-      let protocolUrl = "";
-      const lower = cleanTarget.toLowerCase();
+      let protocolUrl = ""; const lower = cleanTarget.toLowerCase();
       if (lower.includes("3dsmax.exe")) protocolUrl = "openmax://";
       else if (lower.includes("devenv.exe")) protocolUrl = "vs2026://";
       else if (lower.includes("eclipse.exe")) protocolUrl = "eclipse://";
       else if (lower.includes("code.exe")) protocolUrl = "vscode://";
       else if (lower.includes("marktext.exe")) protocolUrl = "marktext://";
-
       if (protocolUrl) { window.location.href = protocolUrl; return; }
       window.open('file:///' + cleanTarget.replace(/\\/g, '/'));
     }
 
     function restoreDefaultData() {
-      if(confirm('기본 탑재 고정형 수업자료를 복구하여 추가하시겠습니까? (커스텀 데이터 유지)')) {
+      if(confirm('기본 탑재 고정형 수업자료를 복구하여 추가하시겠습니까? (내 자료 유지)')) {
         defaultSubjects.forEach(s => { if(!subjects.includes(s)) subjects.push(s); });
         defaultData.forEach(d => { if(!data.some(x => x.title === d.title)) data.push(d); });
-        saveCurrentStateToFirebase();
-        updateSidebarSubjects();
-        render(currentMode);
-        alert('복구가 성료되었습니다.');
+        saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode); alert('복구가 성료되었습니다.');
       }
     }
 
@@ -906,30 +809,16 @@
       const container = document.getElementById('ddayListContainer');
       if(!container) return; container.innerHTML = '';
       const today = new Date(); today.setHours(0,0,0,0);
-
       ddayList.forEach(item => {
         const target = new Date(item.date); target.setHours(0,0,0,0);
-        const diffTime = target.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+        const diffDays = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         let ddayStr = ""; let styleClass = ""; let textStyle = "";
-        if (diffDays > 0) {
-          ddayStr = `D-${diffDays}`;
-          styleClass = "bg-primary-fixed border border-primary text-primary font-bold";
-          textStyle = "text-primary font-bold";
-        } else if (diffDays === 0) {
-          ddayStr = "D-Day 🔥";
-          styleClass = "bg-red-100 border-2 border-red-600 animate-pulse";
-          textStyle = "text-red-600 font-black";
-        } else {
-          ddayStr = "종료 🎉";
-          styleClass = "bg-surface-c border border-ol-variant opacity-60";
-          textStyle = "text-on-surface-variant";
-        }
+        if (diffDays > 0) { ddayStr = `D-${diffDays}`; styleClass = "bg-primary-fixed border border-primary text-primary font-bold"; textStyle = "text-primary font-bold"; } 
+        else if (diffDays === 0) { ddayStr = "D-Day 🔥"; styleClass = "bg-red-100 border-2 border-red-600 animate-pulse"; textStyle = "text-red-600 font-black"; } 
+        else { ddayStr = "종료 🎉"; styleClass = "bg-surface-c border border-ol-variant opacity-60"; textStyle = "text-on-surface-variant"; }
         container.innerHTML += `
           <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] ${styleClass}">
-            <span>${item.title}:</span>
-            <span class="${textStyle}">${ddayStr}</span>
+            <span>${item.title}:</span><span class="${textStyle}">${ddayStr}</span>
             <button onclick="removeDDay(${item.id}, event)" class="hover:text-red-500 font-bold ml-1 text-[10px] opacity-40">✕</button>
           </div>`;
       });
@@ -940,107 +829,85 @@
       if(currentMode !== 'community') render(currentMode);
     }
 
-    // 뷰포트 드로잉 라우터 전면 리팩토링 (커뮤니티 완벽 분리 구현)
+    // 🌟 [변경] 과목명 배지 노출 및 기존 4단 그리드 레이아웃 완벽 복구 
     function render(mode) {
       currentMode = mode;
-      const dashView = document.getElementById('mainDashboardContent');
-      const commView = document.getElementById('mainCommunityContent');
-      const hSearch = document.getElementById('headerSearchWrapper');
-      const mSearch = document.getElementById('mobileSearchWrapper');
+      const dashView = document.getElementById('mainDashboardContent'); const commView = document.getElementById('mainCommunityContent');
+      const hSearch = document.getElementById('headerSearchWrapper'); const mSearch = document.getElementById('mobileSearchWrapper');
 
-      // 커뮤니티 전용 모드 스위칭 격리 처리
       if (mode === 'community') {
-        dashView.classList.add('hidden');
-        commView.classList.remove('hidden');
-        if(hSearch) hSearch.classList.add('invisible');
-        if(mSearch) mSearch.classList.add('hidden');
-        updateActiveMenu('community');
-        switchCommunityTab('board');
-        return;
+        dashView.classList.add('hidden'); commView.classList.remove('hidden');
+        if(hSearch) hSearch.classList.add('invisible'); if(mSearch) mSearch.classList.add('hidden');
+        updateActiveMenu('community'); switchCommunityTab('board'); return;
       }
+      dashView.classList.remove('hidden'); commView.classList.add('hidden');
+      if(hSearch) hSearch.classList.remove('invisible'); if(mSearch) mSearch.classList.remove('hidden');
 
-      // 대시보드 모드일 때
-      dashView.classList.remove('hidden');
-      commView.classList.add('hidden');
-      if(hSearch) hSearch.classList.remove('invisible');
-      if(mSearch) mSearch.classList.remove('hidden');
-
-      const board = document.getElementById('board');
-      const boardTitle = document.getElementById('boardTitle');
-      board.innerHTML = '';
-      updateActiveMenu(mode);
+      const board = document.getElementById('board'); const boardTitle = document.getElementById('boardTitle');
+      board.innerHTML = ''; updateActiveMenu(mode);
 
       let filtered = data;
-      if (searchQuery) {
-        filtered = data.filter(item => item.title.toLowerCase().includes(searchQuery) || item.subject.toLowerCase().includes(searchQuery) || item.week.toLowerCase().includes(searchQuery));
-      }
+      if (searchQuery) filtered = data.filter(item => item.title.toLowerCase().includes(searchQuery) || item.subject.toLowerCase().includes(searchQuery) || item.week.toLowerCase().includes(searchQuery));
 
-      if (mode === 'subject') {
-        boardTitle.innerText = "내 과목별 타임라인 보드";
-        subjects.forEach(sub => {
-          const subItems = filtered.filter(x => x.subject === sub);
-          let cardsHtml = "";
-          subItems.forEach(item => cardsHtml += createCardHtml(item, false));
-          if(!cardsHtml) cardsHtml = `<p class="text-[12px] text-on-surface-variant opacity-50 py-2">지정된 학습 자료가 없습니다.</p>`;
+      if (mode === 'subject' || mode === 'week') {
+        boardTitle.innerText = mode === 'week' ? "학사 주차별 타임라인 보드" : "내 과목별 타임라인 보드";
+        
+        // 가로 스크롤 취소 -> 원래 사용하시던 그리드 배열(xl:grid-cols-4) 적용
+        let gridWrapperHtml = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full items-start">`;
+        const loopKeys = mode === 'week' ? ["1주차","2주차","3주차","4주차","5주차","6주차","7주차","8주차","9주차","10주차","11주차","12주차","13주차","14주차","15주차"] : subjects;
 
-          board.innerHTML += `
-            <div class="bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-2sm flex flex-col gap-3">
-              <h4 class="font-bold text-primary border-b border-ol-variant/40 pb-1 cursor-pointer hover:underline" onclick="renderSubjectDetail('${sub}')">📚 ${sub}</h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${cardsHtml}</div>
-            </div>`;
+        loopKeys.forEach(key => {
+          const itemsInKey = filtered.filter(x => x[mode] === key);
+          if(mode === 'week' && itemsInKey.length === 0 && !searchQuery) return;
+
+          let columnHtml = `
+            <div class="column flex flex-col w-full bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-sm">
+              <h2 class="text-[15px] font-bold text-primary border-b border-ol-variant pb-2.5 mb-3 text-center">${mode === 'week' ? '📅 ' : '📚 '}${key}</h2>
+              <div class="card-list flex flex-col gap-2">`;
+          
+          if(itemsInKey.length === 0) {
+            columnHtml += `<p class="text-[12px] text-on-surface-variant opacity-50 py-2 text-center">자료가 없습니다.</p>`;
+          } else {
+            // [수정] 카드 생성 함수를 호출할 때 이제 무조건 과목명이 보이도록 수정했습니다.
+            itemsInKey.forEach(item => columnHtml += createCardHtml(item));
+          }
+          columnHtml += `</div></div>`;
+          gridWrapperHtml += columnHtml;
         });
+        gridWrapperHtml += `</div>`;
+        board.innerHTML = gridWrapperHtml;
       } else if (mode === 'all') {
         boardTitle.innerText = "전체 리스트 대시보드";
         let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
-        filtered.forEach(item => html += createCardHtml(item, true));
+        filtered.forEach(item => html += createCardHtml(item));
         html += `</div>`;
         board.innerHTML = html;
-      } else if (mode === 'week') {
-        boardTitle.innerText = "학사 주차별 타임라인";
-        for(let w=1; w<=15; w++) {
-          const wStr = `${w}주차`;
-          const wItems = filtered.filter(x => x.week === wStr);
-          if(wItems.length === 0 && !searchQuery) continue;
-
-          let cardsHtml = "";
-          wItems.forEach(item => cardsHtml += createCardHtml(item, true));
-          if(!cardsHtml) cardsHtml = `<p class="text-[12px] text-on-surface-variant opacity-40">해당 주차 자료 없음</p>`;
-
-          board.innerHTML += `
-            <div class="bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-2sm flex flex-col gap-3">
-              <h4 class="font-bold text-primary border-b border-ol-variant/40 pb-1">📅 ${wStr}</h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${cardsHtml}</div>
-            </div>`;
-        }
       }
     }
 
     function renderSubjectDetail(subjectName) {
-      currentMode = subjectName;
-      updateActiveMenu('');
-      const board = document.getElementById('board');
-      const boardTitle = document.getElementById('boardTitle');
-      board.innerHTML = '';
-      boardTitle.innerText = `과목 단독 보기: ${subjectName}`;
-
+      currentMode = subjectName; updateActiveMenu('');
+      const board = document.getElementById('board'); const boardTitle = document.getElementById('boardTitle');
+      board.innerHTML = ''; boardTitle.innerText = `과목 단독 보기: ${subjectName}`;
       let html = `<div class="bg-surface-c-low border border-ol-variant rounded-xl p-5 shadow-sm max-w-3xl mx-auto w-full"><div class="card-list flex flex-col gap-2.5">`;
       const filtered = data.filter(item => item.subject === subjectName && (!searchQuery || item.title.toLowerCase().includes(searchQuery)));
-      filtered.forEach(item => html += createCardHtml(item, false));
+      filtered.forEach(item => html += createCardHtml(item));
       if(filtered.length === 0) html += `<p class="text-center text-[13px] text-on-surface-variant py-4">등록 자료가 존재하지 않습니다.</p>`;
       html += `</div></div>`;
       board.innerHTML = html;
     }
 
-    function createCardHtml(item, showSubTag) {
-      const tag = showSubTag ? `<span class="text-[10px] mt-1 px-1.5 py-0.5 rounded bg-primary-fixed text-primary font-bold self-start">${item.subject}</span>` : '';
+    // 🌟 [변경] 과목명 뱃지가 어느 화면에서나 명확하게 표시되도록 통일
+    function createCardHtml(item) {
       const delBtn = `<button onclick="removeMaterial(${item.id}, event)" class="text-[12px] opacity-40 hover:opacity-100 p-1 hover:bg-error-container rounded shrink-0 transition">🗑️</button>`;
-      
       return `
         <div onclick="launchTarget('${item.link || ''}')" class="kanban-card flex items-start gap-3 p-3 rounded-lg bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-0.5 transition duration-200 cursor-pointer">
           <div class="flex-1 min-w-0 flex flex-col">
             <span class="text-[13.5px] font-medium text-on-surface break-words leading-snug">${item.title}</span>
-            <span class="text-[10px] text-on-surface-variant opacity-60 mt-0.5">${item.week}</span>
-            ${tag}
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-primary-fixed text-primary font-bold">${item.subject}</span>
+              <span class="text-[10px] text-on-surface-variant opacity-60">${item.week}</span>
+            </div>
           </div>
           ${delBtn}
         </div>`;
@@ -1049,14 +916,12 @@
     function updateActiveMenu(mode) {
       const items = document.querySelectorAll('.menu-item');
       items.forEach(el => el.className = "menu-item flex items-center gap-4 px-4 py-[10px] rounded text-on-surface-variant hover:bg-secondary-container text-[14px]");
-      
       if(mode === 'subject') items[0].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');
       if(mode === 'all') items[1].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');
       if(mode === 'week') items[2].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');
       if(mode === 'community') items[3].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');
     }
 
-    // 모달 제어용 유틸 함수 모음 (기존 기능 축 유지)
     function openSubjectModal() { document.getElementById('subjectModal').classList.remove('hidden'); }
     function closeSubjectModal() { document.getElementById('subjectModal').classList.add('hidden'); document.getElementById('newSubjectName').value = ''; }
     function openItemModal() {
@@ -1069,46 +934,44 @@
     function closeDDayModal() { document.getElementById('ddayModal').classList.add('hidden'); document.getElementById('newDDayTitle').value = ''; document.getElementById('newDDayDate').value = ''; }
 
     function addSubject() {
-      const name = document.getElementById('newSubjectName').value.trim();
-      if(!name) return;
+      const name = document.getElementById('newSubjectName').value.trim(); if(!name) return;
       if(subjects.includes(name)) { alert('동일 명칭 과목이 존재합니다.'); return; }
       subjects.push(name); saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode); closeSubjectModal();
     }
     function removeSubject(name) {
-      if(confirm(`[${name}] 과목을 삭제할까요? 소속된 학습 데이터 링크는 전체 리스트에 존치됩니다.`)) {
-        subjects = subjects.filter(x => x !== name); saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode);
-      }
+      if(confirm(`[${name}] 과목을 삭제할까요?`)) { subjects = subjects.filter(x => x !== name); saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode); }
     }
     function addItem() {
-      const title = document.getElementById('newItemTitle').value.trim();
-      const link = document.getElementById('newItemLink').value.trim();
-      const week = document.getElementById('newItemWeek').value;
-      const subject = document.getElementById('newItemSubject').value;
+      const title = document.getElementById('newItemTitle').value.trim(); const link = document.getElementById('newItemLink').value.trim();
+      const week = document.getElementById('newItemWeek').value; const subject = document.getElementById('newItemSubject').value;
       if(!title) { alert('제목을 입력하세요.'); return; }
       data.push({ id: Date.now(), title, link, week, subject });
       saveCurrentStateToFirebase(); render(currentMode); closeItemModal();
     }
     function removeMaterial(id, event) {
       if(event) event.stopPropagation();
-      if(confirm('이 자료집 항목을 삭제할까요?')) {
-        data = data.filter(x => x.id !== id); saveCurrentStateToFirebase(); render(currentMode);
-      }
+      if(confirm('이 자료집 항목을 삭제할까요?')) { data = data.filter(x => x.id !== id); saveCurrentStateToFirebase(); render(currentMode); }
     }
     function addDDayEvent() {
-      const title = document.getElementById('newDDayTitle').value.trim();
-      const date = document.getElementById('newDDayDate').value;
+      const title = document.getElementById('newDDayTitle').value.trim(); const date = document.getElementById('newDDayDate').value;
       if(!title || !date) return;
       ddayList.push({ id: Date.now(), title, date });
       saveCurrentStateToFirebase(); renderDDayList(); closeDDayModal();
     }
     function removeDDay(id, event) {
-      if(event) event.stopPropagation();
-      ddayList = ddayList.filter(x => x.id !== id); saveCurrentStateToFirebase(); renderDDayList();
+      if(event) event.stopPropagation(); ddayList = ddayList.filter(x => x.id !== id); saveCurrentStateToFirebase(); renderDDayList();
     }
 
-    // ----------------------------------------------------------------------------------
-    // 대형 학사 일정 데이터셋 및 캘린더 엔진 기동 파트
-    // ----------------------------------------------------------------------------------
+    // 🌟 [추가] 2026년 기준 공휴일 명단 (대체 공휴일 및 달력 표시용)
+    const holidays = {
+      "01-01": "신정", "03-01": "삼일절", "05-01": "노동절", "05-05": "어린이날", "06-06": "현충일",
+      "07-17": "제헌절", "08-15": "광복절", "10-03": "개천절", "10-09": "한글날", "12-25": "성탄절",
+      "2026-02-16": "설날 연휴", "2026-02-17": "설날 당일", "2026-02-18": "설날 연휴",
+      "2026-03-02": "대체공휴일", "2026-05-24": "부처님오신날", "2026-05-25": "대체공휴일",
+      "2026-08-17": "대체공휴일", "2026-09-24": "추석 연휴", "2026-09-25": "추석 당일",
+      "2026-09-26": "추석 연휴", "2026-09-28": "대체공휴일", "2026-10-05": "대체공휴일"
+    };
+
     const fixedCalendarEvents = [
       { start: "2026-03-02", end: "2026-03-02", title: "1학기 개강 🌸", type: "major" },
       { start: "2026-04-21", end: "2026-04-27", title: "1학기 중간고사 ✍️", type: "major" },
@@ -1132,109 +995,100 @@
       const firstDay = new Date(year, month, 1).getDay();
       const lastDate = new Date(year, month + 1, 0).getDate();
 
-      // 공백 패딩 마킹
       for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="p-2"></div>`;
 
       for(let date=1; date<=lastDate; date++) {
         const fullDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+        const mdStr = `${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
         const weekday = new Date(year, month, date).getDay();
 
-        // 범위형 학사 일정 히트매핑
-        const activeEvents = fixedCalendarEvents.filter(ev => {
-          const s = new Date(ev.start); const e = new Date(ev.end || ev.start);
-          const c = new Date(fullDateStr); return c >= s && c <= e;
-        });
-
+        // 🌟 공휴일 체크해서 글씨를 빨간색으로 변경
+        const isHoliday = holidays[fullDateStr] || holidays[mdStr];
+        const activeEvents = fixedCalendarEvents.filter(ev => { const s = new Date(ev.start); const e = new Date(ev.end || ev.start); const c = new Date(fullDateStr); return c >= s && c <= e; });
         const hasCustom = personalEvents.some(x => x.date === fullDateStr);
+
         let colorClass = "text-on-surface"; let bgClass = "bg-surface-c-lowest";
         
-        if(weekday === 0 || weekday === 6) colorClass = "text-red-500 font-bold";
+        if(weekday === 0 || isHoliday) colorClass = "text-red-500 font-bold";
+        else if(weekday === 6) colorClass = "text-blue-500 font-bold";
+
         if(activeEvents.length > 0) bgClass = "bg-primary-fixed/60 font-bold text-primary";
         
         let dot = hasCustom ? `<span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-amber-500 rounded-full"></span>` : '';
         const isSelected = selectedDateStr === fullDateStr ? 'border-2 border-primary shadow-md scale-105 z-5' : 'border border-ol-variant/30';
 
+        // 공휴일이면 날짜 아래에 작은 텍스트로 이름 표시
+        let holidayNameHtml = isHoliday ? `<div class="text-[9px] text-red-500 mt-0.5 truncate w-full px-0.5">${isHoliday}</div>` : '';
+
         grid.innerHTML += `
-          <div onclick="showDateDetails('${fullDateStr}')" class="p-2 rounded-lg text-center text-[12px] relative cursor-pointer min-h-[42px] flex flex-col justify-between ${bgClass} ${colorClass} ${isSelected}">
-            <span>${date}</span>
+          <div onclick="showDateDetails('${fullDateStr}')" class="p-1 rounded-lg text-center text-[12px] relative cursor-pointer min-h-[46px] flex flex-col items-center justify-center ${bgClass} ${colorClass} ${isSelected}">
+            <span class="z-10">${date}</span>
+            ${holidayNameHtml}
             ${dot}
           </div>`;
       }
     }
 
     function showDateDetails(dateStr) {
-      selectedDateStr = dateStr;
-      drawCalendarGrid();
+      selectedDateStr = dateStr; drawCalendarGrid();
       const box = document.getElementById('calendarDetailsBox');
       const header = document.getElementById('selectedDateHeader');
       const container = document.getElementById('selectedDateDetailsContainer');
       
-      box.classList.remove('hidden');
-      header.innerText = `📌 [${dateStr}] 일정 타임라인`;
-      container.innerHTML = '';
+      box.classList.remove('hidden'); header.innerText = `📌 [${dateStr}] 일정 타임라인`; container.innerHTML = '';
 
-      // 1. 고정 학사일정
-      const matchedFixed = fixedCalendarEvents.filter(ev => {
-        const s = new Date(ev.start); const e = new Date(ev.end || ev.start);
-        const c = new Date(dateStr); return c >= s && c <= e;
-      });
+      // 🌟 공휴일이면 상세 정보에도 표시
+      const mdStr = dateStr.substring(5);
+      const isHoliday = holidays[dateStr] || holidays[mdStr];
+      if (isHoliday) {
+        container.innerHTML += `
+          <div class="flex items-center gap-2 p-1.5 rounded bg-red-50 border border-red-200">
+            <span class="text-[10px] px-1 py-0.5 rounded bg-red-500 text-white font-bold">휴일</span>
+            <span class="font-bold text-red-600">${isHoliday}</span>
+          </div>`;
+      }
+
+      const matchedFixed = fixedCalendarEvents.filter(ev => { const s = new Date(ev.start); const e = new Date(ev.end || ev.start); const c = new Date(dateStr); return c >= s && c <= e; });
       matchedFixed.forEach(ev => {
         container.innerHTML += `
           <div class="flex items-center gap-2 p-1.5 rounded bg-primary-fixed text-primary border border-primary/20">
-            <span class="text-[10px] px-1 py-0.5 rounded bg-primary text-white font-bold">학사</span>
-            <span class="font-medium">${ev.title}</span>
+            <span class="text-[10px] px-1 py-0.5 rounded bg-primary text-white font-bold">학사</span><span class="font-medium">${ev.title}</span>
           </div>`;
       });
 
-      // 2. 내 개인 일정
       const matchedPersonal = personalEvents.filter(x => x.date === dateStr);
       matchedPersonal.forEach(ev => {
         container.innerHTML += `
           <div class="flex items-center justify-between gap-2 p-1.5 rounded bg-amber-50 border border-amber-200">
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] px-1 py-0.5 rounded bg-amber-500 text-white font-bold">개인</span>
-              <span class="font-medium text-amber-900">${ev.title}</span>
-            </div>
+            <div class="flex items-center gap-2"><span class="text-[10px] px-1 py-0.5 rounded bg-amber-500 text-white font-bold">개인</span><span class="font-medium text-amber-900">${ev.title}</span></div>
             <button onclick="deletePersonalEvent(${ev.id}, event)" class="text-red-500 text-[10px] px-1.5 hover:bg-red-100 rounded">삭제</button>
           </div>`;
       });
 
-      if(container.innerHTML === '') container.innerHTML = `<p class="text-center text-on-surface-variant opacity-40 py-2">등록된 일정이 없는 클린한 날입니다. ✨</p>`;
+      if(container.innerHTML === '') container.innerHTML = `<p class="text-center text-on-surface-variant opacity-40 py-2">일정이 없는 클린한 날입니다. ✨</p>`;
     }
 
     function openAddPersonalEventPrompt() {
-      if(!selectedDateStr) { alert('달력에서 날짜를 먼저 하나 선택해 주세요.'); return; }
-      const title = prompt(`[${selectedDateStr}] 일자에 등록할 개인 일정 명칭을 입력하세요:`);
+      if(!selectedDateStr) { alert('달력에서 날짜를 선택해 주세요.'); return; }
+      const title = prompt(`[${selectedDateStr}] 일자에 등록할 개인 일정 명칭:`);
       if(!title || !title.trim()) return;
-
       personalEvents.push({ id: Date.now(), date: selectedDateStr, title: title.trim() });
       saveCurrentStateToFirebase(); drawCalendarGrid(); showDateDetails(selectedDateStr);
     }
-
     function deletePersonalEvent(id, event) {
       if(event) event.stopPropagation();
-      if(confirm('선택 일정을 지울까요?')) {
-        personalEvents = personalEvents.filter(x => x.id !== id);
-        saveCurrentStateToFirebase(); drawCalendarGrid(); showDateDetails(selectedDateStr);
-      }
+      if(confirm('일정을 지울까요?')) { personalEvents = personalEvents.filter(x => x.id !== id); saveCurrentStateToFirebase(); drawCalendarGrid(); showDateDetails(selectedDateStr); }
     }
 
-    // 최상단 실시간 타이머 가동 엔진
     function updateLiveClock() {
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      const now = new Date();
+      const days = ['일', '월', '화', '수', '목', '금', '토']; const now = new Date();
       const y = now.getFullYear(); const m = String(now.getMonth()+1).padStart(2,'0'); const d = String(now.getDate()).padStart(2,'0');
-      const day = days[now.getDay()];
-      const hrs = now.getHours(); const min = String(now.getMinutes()).padStart(2,'0'); const sec = String(now.getSeconds()).padStart(2,'0');
-      const ampm = hrs >= 12 ? '오후' : '오전';
-      const displayHrs = String(hrs % 12 || 12).padStart(2,'0');
-
+      const day = days[now.getDay()]; const hrs = now.getHours(); const min = String(now.getMinutes()).padStart(2,'0'); const sec = String(now.getSeconds()).padStart(2,'0');
+      const ampm = hrs >= 12 ? '오후' : '오전'; const displayHrs = String(hrs % 12 || 12).padStart(2,'0');
       const text = `${y}년 ${m}월 ${d}일 (${day}) ${ampm} ${displayHrs}:${min}:${sec}`;
-      const element = document.getElementById('liveDateTime');
-      if(element) element.innerText = text;
+      const element = document.getElementById('liveDateTime'); if(element) element.innerText = text;
     }
-    setInterval(updateLiveClock, 1000);
-    updateLiveClock();
+    setInterval(updateLiveClock, 1000); updateLiveClock();
   </script>
 </body>
 </html>
