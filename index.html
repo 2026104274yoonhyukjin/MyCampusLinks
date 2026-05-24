@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Firebase 설정 -->
+  <!-- Firebase 설정 (파일 1) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -92,20 +92,13 @@
 
 <body class="font-inter bg-surface text-on-surface min-h-screen">
 
-  <!-- Firebase 로그인 모달 -->
+  <!-- Firebase 로그인 모달 (파일 1) -->
   <div id="authContainer" class="fixed inset-0 z-50 bg-surface flex items-center justify-center hidden">
     <div class="bg-surface-c-low border border-ol-variant rounded-xl max-w-sm w-full p-8 shadow-xl mx-4 flex flex-col gap-4">
       <div class="text-center mb-2">
         <h1 class="text-[24px] font-bold text-primary tracking-tight">MYCAMPUSLINKS</h1>
         <p class="text-[13px] text-on-surface-variant mt-1" id="authSubtitle">서비스 이용을 위해 로그인해 주세요.</p>
       </div>
-
-      <!-- 닉네임 입력 (회원가입 시에만 표시됨) -->
-      <div id="nicknameField" class="hidden">
-        <label class="block text-[12px] font-semibold text-on-surface-variant uppercase mb-1">닉네임</label>
-        <input type="text" id="authNickname" placeholder="예: 코딩마스터" class="w-full px-3 py-2 text-[14px] rounded border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary transition-colors">
-      </div>
-
       <div>
         <label class="block text-[12px] font-semibold text-on-surface-variant uppercase mb-1">이메일 주소</label>
         <input type="email" id="authEmail" placeholder="example@mjc.ac.kr" class="w-full px-3 py-2 text-[14px] rounded border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary transition-colors">
@@ -113,7 +106,7 @@
       <div>
         <label class="block text-[12px] font-semibold text-on-surface-variant uppercase mb-1">비밀번호</label>
         <div class="relative w-full">
-         <input type="password" id="authPassword" placeholder="••••••••" class="w-full px-3 py-2 pr-10 text-[14px] rounded border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary transition-colors">
+          <input type="password" id="authPassword" placeholder="••••••••" class="w-full px-3 py-2 pr-10 text-[14px] rounded border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary transition-colors">
           <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 px-3 flex items-center text-on-surface-variant hover:text-primary transition-colors" tabindex="-1">
             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
@@ -134,6 +127,7 @@
   <input type="checkbox" id="darkToggle" class="hidden">
   <label for="sidebarToggle" class="sidebar-overlay fixed inset-0 bg-black/40 z-20 cursor-pointer"></label>
 
+  <!-- 사이드바 (메모 기능 제거됨) -->
   <aside class="sidebar fixed left-0 top-0 h-full w-[280px] bg-surface-c-low border-r border-ol-variant flex flex-col z-30">
     <div class="px-6 pt-10 pb-4">
       <h1 class="text-[20px] font-semibold text-primary tracking-tight">MYCAMPUSLINKS</h1>
@@ -141,7 +135,7 @@
         <p class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">통합 대시보드</p>
         <button onclick="logout()" id="userStatusBtn" class="text-[11px] text-error hover:underline hidden">로그아웃</button>
       </div>
-      <p id="userEmailDisplay" class="text-[12px] text-primary font-bold mt-1.5 hidden truncate"></p>
+      <p id="userEmailDisplay" class="text-[11px] text-primary font-medium mt-1.5 hidden truncate"></p>
     </div>
 
     <nav class="px-4 flex flex-col gap-1" id="menuGroup">
@@ -173,6 +167,7 @@
   </aside>
 
   <main class="lg:ml-[280px] min-h-screen flex flex-col">
+    <!-- 헤더 (검색, 캘린더, 멀티 디데이) -->
     <header class="sticky top-0 z-10 bg-surface/80 backdrop-blur-md border-b border-ol-variant px-4 md:px-8 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="flex items-center gap-4 flex-1">
         <label for="sidebarToggle" class="lg:hidden cursor-pointer text-on-surface text-[24px] leading-none">☰</label>
@@ -204,6 +199,7 @@
         </label>
       </div>
     </header>
+
     <div class="px-4 pt-4 md:hidden">
       <input type="text" id="mobileSearchInput" oninput="handleSearch(true)" placeholder="과목 또는 자료 검색..." class="w-full px-3 py-2 text-[14px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface">
     </div>
@@ -267,11 +263,11 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
             <h3 id="boardTitle" class="text-[18px] md:text-[20px] font-semibold text-on-surface">저장 자료</h3>
-            <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드</p>
+            <p class="text-[13px] text-on-surface-variant mt-0.5">정렬 기준에 따른 학습 자료 보드</p>
           </div>
           <div>
             <button onclick="resetAllStorageData()" class="px-3 py-1 text-[12px] font-medium rounded border border-error text-error bg-surface-c-lowest hover:bg-error-container hover:text-white transition-all">
-              ⚠️ 초기화 (서버 데이터 강제 삭제)
+              ⚠️ 초기화 (과거 데이터 강제 삭제)
             </button>
           </div>
         </div>
@@ -370,10 +366,10 @@
           <h3 id="calendarMonthTitle" class="text-[16px] font-bold text-on-surface min-w-[100px] text-center">----년 --월</h3>
           <button onclick="moveCalendarMonth(1)" class="px-2 py-1 border border-ol-variant rounded bg-surface-c-lowest hover:bg-secondary-container text-[14px] font-bold">&gt;</button>
         </div>
-       <button onclick="closeCalendarModal()" class="text-[22px] text-on-surface-variant hover:text-on-surface leading-none">&times;</button>
+        <button onclick="closeCalendarModal()" class="text-[22px] text-on-surface-variant hover:text-on-surface leading-none">&times;</button>
       </div>
       <div class="grid grid-cols-7 text-center text-[12px] font-bold text-on-surface-variant border-b border-ol-variant pb-2 mb-2">
-        <div class="text-red-500">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-red-500">토</div>
+        <div class="text-red-500">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-500">토</div>
       </div>
       <div id="calendarDaysGrid" class="grid grid-cols-7 text-center text-[13px] gap-1 overflow-y-auto flex-1 p-1"></div>
       <div class="mt-4 border-t border-ol-variant pt-3 flex flex-col gap-2">
@@ -389,29 +385,21 @@
   </div>
 
   <script>
-    // ----------------------------------------------------------------------------------
-    // Firebase 인증 및 DB 동기화 로직 (localStorage 제거)
-    // ----------------------------------------------------------------------------------
-    let currentUser = null;
+    // Firebase Auth Functions
     let isLoginMode = true;
-
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       const subtitle = document.getElementById('authSubtitle');
       const primaryBtn = document.getElementById('authPrimaryBtn');
       const toggleBtn = document.getElementById('authToggleBtn');
-      const nicknameField = document.getElementById('nicknameField');
-
       if (isLoginMode) {
         subtitle.innerText = "서비스 이용을 위해 로그인해 주세요.";
         primaryBtn.innerText = "로그인하기";
         toggleBtn.innerText = "아직 계정이 없으신가요? 회원가입하기";
-        nicknameField.classList.add('hidden');
       } else {
         subtitle.innerText = "새로운 계정을 생성합니다.";
         primaryBtn.innerText = "회원가입 완료하기";
         toggleBtn.innerText = "이미 계정이 있으신가요? 로그인하기";
-        nicknameField.classList.remove('hidden');
       }
     }
 
@@ -430,27 +418,17 @@
     function handleAuth() {
       const email = document.getElementById('authEmail').value.trim();
       const password = document.getElementById('authPassword').value;
-      const nickname = document.getElementById('authNickname').value.trim();
-
       if (!email || !password) {
         alert("이메일과 비밀번호를 모두 입력해 주세요."); return;
       }
-      if (!isLoginMode && !nickname) {
-        alert("닉네임을 입력해 주세요."); return;
-      }
-
       if (isLoginMode) {
         auth.signInWithEmailAndPassword(email, password).catch(err => alert("로그인 실패: " + err.message));
       } else {
         auth.createUserWithEmailAndPassword(email, password)
-          .then((userCredential) => {
-            return userCredential.user.updateProfile({ displayName: nickname });
-          })
           .then(() => {
             alert("회원가입이 완료되었습니다!");
             isLoginMode = true; toggleAuthMode();
-          })
-          .catch(err => alert("회원가입 실패: " + err.message));
+          }).catch(err => alert("회원가입 실패: " + err.message));
       }
     }
 
@@ -458,98 +436,23 @@
       if (confirm("안전하게 로그아웃 하시겠습니까?")) { auth.signOut(); }
     }
 
-    // 전역 데이터 변수 (Firebase에서 받아옴)
-    let subjects = [];
-    let data = [];
-    let personalEvents = [];
-    let ddayList = [];
-
-    // 신규 가입 시 초기값
-    const defaultSubjects = ["게임프로그래밍", "게임그래픽 기초", "객체 지향 프로그래밍", "프론트엔드프로그래밍"];
-    const defaultData = [
-      { id: 1, title: "C# 프로그래밍 첫걸음 (Chapter 01)", week: "1주차", subject: "게임프로그래밍", link: "pdf/ch01.pdf" },
-      { id: 7, title: "3주차-컵", week: "3주차", subject: "게임그래픽 기초", link: "https://youtu.be/0V7-B76oDb0?si=PeFMPxFw7EPmTvIX" },
-      { id: 22, title: "1장 Java 프로그래밍 언어의 특징 및 동작 원리 이해", week: "1주차", subject: "객체 지향 프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf" },
-      { id: 29, title: "OT 자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT" }
-    ];
-    const defaultDDayList = [{ id: 1001, title: "기말고사 기간", date: "2026-06-09" }];
-
     auth.onAuthStateChanged(user => {
       const authContainer = document.getElementById('authContainer');
       const userStatusBtn = document.getElementById('userStatusBtn');
       const userEmailDisplay = document.getElementById('userEmailDisplay');
-
       if (user) {
-        currentUser = user;
         authContainer.classList.add('hidden');
         if (userStatusBtn) userStatusBtn.classList.remove('hidden');
         if (userEmailDisplay) {
           userEmailDisplay.classList.remove('hidden');
-          const displayName = user.displayName || user.email.split('@')[0];
-          userEmailDisplay.innerText = `👤 ${displayName}님`;
+          userEmailDisplay.innerText = `👤 ${user.email.split('@')[0]} 학우님`;
         }
-
-        // 로그인 성공 시 Firebase에서 유저 데이터 불러오기
-        database.ref('users/' + user.uid).once('value').then((snapshot) => {
-          const val = snapshot.val();
-          if (val) {
-            subjects = val.subjects || [];
-            data = val.data || [];
-            personalEvents = val.personalEvents || [];
-            ddayList = val.ddayList || [];
-          } else {
-            // DB에 데이터가 없으면 초기값 세팅 후 저장
-            subjects = [...defaultSubjects];
-            data = [...defaultData];
-            personalEvents = [];
-            ddayList = [...defaultDDayList];
-            saveCurrentStateToFirebase();
-          }
-          // 데이터 로드 완료 후 화면 갱신
-          updateSidebarSubjects();
-          renderDDayList();
-          render('subject');
-        });
-
       } else {
-        currentUser = null;
         authContainer.classList.remove('hidden');
         if (userStatusBtn) userStatusBtn.classList.add('hidden');
         if (userEmailDisplay) userEmailDisplay.classList.add('hidden');
       }
     });
-
-    // 데이터를 Firebase에 저장하는 함수 (localStorage 대체)
-    function saveCurrentStateToFirebase() {
-      if(!currentUser) return;
-      database.ref('users/' + currentUser.uid).set({
-        subjects: subjects,
-        data: data,
-        personalEvents: personalEvents,
-        ddayList: ddayList
-      });
-    }
-
-    function resetAllStorageData() {
-      if (confirm("⚠️ 주의: 추가하여 저장된 모든 데이터(디데이 포함)가 서버에서 삭제됩니다.\n\n완전 초기화하시겠습니까?")) {
-        subjects = [...defaultSubjects]; 
-        data = [...defaultData]; 
-        personalEvents = [];
-        ddayList = [...defaultDDayList];
-        saveCurrentStateToFirebase();
-        updateSidebarSubjects(); renderDDayList(); render(currentMode);
-        alert("데이터가 서버에서 초기화되었습니다.");
-      }
-    }
-
-
-    // ----------------------------------------------------------------------------------
-    // 유틸리티 및 일반 기능 (문법 오류 전부 수정됨)
-    // ----------------------------------------------------------------------------------
-    let currentMode = 'subject';
-    let searchQuery = '';
-    let calDate = new Date();
-    let selectedDateStr = '';
 
     function launchTarget(target) {
       if (!target) return;
@@ -577,6 +480,94 @@
       window.open('file:///' + cleanTarget.replace(/\\/g, '/'), '_blank');
     }
 
+    const defaultSubjects = ["게임프로그래밍", "게임그래픽 기초", "객체 지향 프로그래밍", "프론트엔드프로그래밍"];
+    const defaultData = [
+      // 게임프로그래밍
+      { id: 1, title: "C# 프로그래밍 첫걸음 (Chapter 01)", week: "1주차", subject: "게임프로그래밍", link: "pdf/ch01.pdf" },
+      { id: 2, title: "기본 문법 (Chapter 02)", week: "2주차", subject: "게임프로그래밍", link: "pdf/ch02.pdf" },
+      { id: 3, title: "조건문 (Chapter 03)", week: "3주차", subject: "게임프로그래밍", link: "pdf/ch03.pdf" },
+      { id: 4, title: "반복문 (Chapter 04)", week: "4주차", subject: "게임프로그래밍", link: "pdf/ch04.pdf" },
+      { id: 5, title: "클래스 기본 (Chapter 05)", week: "5주차", subject: "게임프로그래밍", link: "pdf/ch05.pdf" },
+      { id: 6, title: "메서드 (Chapter 06)", week: "6주차", subject: "게임프로그래밍", link: "pdf/ch06.pdf" },
+      
+      // 게임그래픽 기초
+      { id: 7, title: "3주차-컵", week: "3주차", subject: "게임그래픽 기초", link: "https://youtu.be/0V7-B76oDb0?si=PeFMPxFw7EPmTvIX" },
+      { id: 8, title: "4주차 2차시-접시,스푼", week: "4주차", subject: "게임그래픽 기초", link: "https://youtu.be/v0lMKBo34ds?si=vzMUhstLUf5vWyTm" },
+      { id: 9, title: "5주차 1차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/JWFie9eDkGA?si=SR5KlKnALQNkAJ1U" },
+      { id: 10, title: "5주차 2차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/BPHuUT0zoKI?si=2E8zRt2wzCqVUpap" },
+      { id: 11, title: "5주차 3차시-검,철퇴", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/XvxTYsfnPpI" },
+      { id: 12, title: "6주차 1차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/KA9KfMoQhTg?si=pnl3XBBT_rgUec8K" },
+      { id: 13, title: "6주차 2차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/DL9LDpRodEg" },
+      { id: 14, title: "6주차 3차시-Reset X Form", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/l6c1epTtNVk?si=9LZOjTp8TjOGZvCa" },
+      { id: 15, title: "7주차 1차시-캐릭터(몸통)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/oy9rC6YQwfQ?si=iIa3w4etvMySTjXi" },
+      { id: 16, title: "7주차 2차시-캐릭터(팔)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/tt-hxXzbWu8?si=zoXrVXOO1LYpQBLW" },
+      { id: 17, title: "7주차 3차시-캐릭터(다리,이빨)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/n9sNFonoh4g?si=fC5kPi6sG7FPzMVS" },
+      { id: 18, title: "10주차 1차시-인체 캐릭터 특징분석", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/IEzmA-YC7bs?si=AUfPz_gkkBLHrNdx" },
+      { id: 19, title: "10주차 2차시-인체(몸통)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/m-Mxw36Ybjk?si=adOxKKQ5pC4pPPmL" },
+      { id: 20, title: "10주차 3차시-인체(팔,다리)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/TgfCel9AQlI?si=LfxVTI1xvs_B8Gcc" },
+      { id: 21, title: "10주차 3차시-인체(손,발)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/qHTTJ7woLNg" },
+
+      // 객체 지향 프로그래밍
+      { id: 22, title: "1장 Java 프로그래밍 언어의 특징 및 동작 원리 이해", week: "1주차", subject: "객체 지향 프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf" },
+      { id: 23, title: "2장-자료형", week: "2주차", subject: "객체 지향 프로그래밍", link: "pdf/2장_자료형.pdf" },
+      { id: 24, title: "3장 연산자", week: "3주차", subject: "객체 지향 프로그래밍", link: "pdf/3장_연산자.pdf" },
+      { id: 25, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체 지향 프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf" },
+      { id: 26, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf" },
+      { id: 27, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf" },
+      { id: 28, title: "7장-클래스 내부 구성요소(필드메서드생성자)", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf" },
+
+      // 프론트엔드프로그래밍
+      { id: 29, title: "OT 자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT" },
+      { id: 30, title: "마크다운 작성방법 참고자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "pdf/마크다운_보충자료.pdf" },
+      { id: 31, title: "3주차 수업 자료-HTML Form & UI", week: "3주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week3" },
+      { id: 32, title: "4주차 수업 자료-CSS 스타일링 & GitHub 배포", week: "4주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week4" },
+      { id: 33, title: "5주차 수업 자료-CSS Layout & 팀 협업", week: "5주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week5" },
+      { id: 34, title: "6주차 수업 자료-Flexbox & 반응형 웹", week: "6주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week6" },
+      { id: 35, title: "7주차 수업 자료-Grid 레이아웃 & 동적 애니메이션", week: "7주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week7" },
+      { id: 36, title: "10주차 수업 자료-실전 팀 빌딩 & README 기반 Git 협업", week: "10주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week10" },
+      { id: 37, title: "11주차 수업 자료-개발 착수 & MVP 기반 태스크 관리", week: "11주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week11" },
+      { id: 38, title: "12주차 수업 자료-MVP 통합 및 알파 버전 완성", week: "12주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week12" }
+    ];
+
+    const officialEvents = [
+      { start: "2026-03-02", end: "2026-03-02", title: "🌱 1학기 개강", type: "major" },
+      { start: "2026-04-20", end: "2026-04-24", title: "✍️ 중간고사 기간", type: "major" },
+      { start: "2026-06-09", end: "2026-06-15", title: "📝 기말고사 기간", type: "major" },
+      { start: "2026-12-25", end: "2026-12-25", title: "🎄 크리스마스", type: "holiday" }
+    ];
+
+    const defaultDDayList = [
+      { id: 1001, title: "기말고사 기간", date: "2026-06-09" }
+    ];
+
+    let subjects = JSON.parse(localStorage.getItem('mySubjects')) || defaultSubjects;
+    let data = JSON.parse(localStorage.getItem('myData')) || defaultData;
+    let personalEvents = JSON.parse(localStorage.getItem('myPersonalEvents')) || [];
+    let ddayList = JSON.parse(localStorage.getItem('myDDayList')) || defaultDDayList;
+
+    let currentMode = 'subject';
+    let searchQuery = '';
+    let calDate = new Date();
+    let selectedDateStr = '';
+
+    function saveToStorage() {
+      localStorage.setItem('mySubjects', JSON.stringify(subjects));
+      localStorage.setItem('myData', JSON.stringify(data));
+    }
+    function savePersonalEvents() { localStorage.setItem('myPersonalEvents', JSON.stringify(personalEvents)); }
+    function saveDDayList() { localStorage.setItem('myDDayList', JSON.stringify(ddayList)); }
+
+    function resetAllStorageData() {
+      if (confirm("⚠️ 주의: 추가하여 저장된 모든 데이터(디데이 포함)가 초기화됩니다.\n\n완전 초기화하시겠습니까?")) {
+        localStorage.clear();
+        subjects = [...defaultSubjects]; data = [...defaultData]; personalEvents = [];
+        ddayList = [...defaultDDayList];
+        saveToStorage(); savePersonalEvents(); saveDDayList();
+        updateSidebarSubjects(); renderDDayList(); render(currentMode);
+        alert("데이터가 초기화되었습니다.");
+      }
+    }
+
     // D-Day Functions
     function openDDayModal() { document.getElementById('ddayModal').classList.remove('hidden'); }
     function closeDDayModal() {
@@ -589,13 +580,13 @@
       const dateVal = document.getElementById('newDDayDate').value;
       if(!title || !dateVal) { alert('제목과 마감 날짜를 모두 지정해주세요.'); return; }
       ddayList.push({ id: Date.now(), title: title, date: dateVal });
-      saveCurrentStateToFirebase(); renderDDayList(); closeDDayModal();
+      saveDDayList(); renderDDayList(); closeDDayModal();
     }
     function removeDDay(id, event) {
       if(event) event.stopPropagation();
       if(confirm("이 D-Day 항목을 삭제하시겠습니까?")) {
         ddayList = ddayList.filter(d => d.id !== id);
-        saveCurrentStateToFirebase(); renderDDayList();
+        saveDDayList(); renderDDayList();
       }
     }
     function renderDDayList() {
@@ -646,20 +637,20 @@
       const name = document.getElementById('newSubjectName').value.trim();
       if(!name) { alert('과목명을 입력해주세요.'); return; }
       if(subjects.includes(name)) { alert('이미 존재하는 과목입니다.'); return; }
-      subjects.push(name); saveCurrentStateToFirebase(); updateSidebarSubjects(); closeSubjectModal();
+      subjects.push(name); saveToStorage(); updateSidebarSubjects(); closeSubjectModal();
     }
     function removeSubject(subjectName, event) {
       if(event) event.stopPropagation();
       if (confirm(`'${subjectName}' 과목을 정말로 삭제하시겠습니까?\n해당 과목 내 모든 자료도 함께 정리됩니다.`)) {
         subjects = subjects.filter(sub => sub !== subjectName);
         data = data.filter(item => item.subject !== subjectName);
-        saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode);
+        saveToStorage(); updateSidebarSubjects(); render(currentMode);
       }
     }
     function removeMaterial(id, event) {
       if(event) event.stopPropagation();
       if (confirm("이 학습 자료를 삭제하시겠습니까?")) {
-        data = data.filter(item => item.id !== id); saveCurrentStateToFirebase(); render(currentMode);
+        data = data.filter(item => item.id !== id); saveToStorage(); render(currentMode);
       }
     }
     function addItem() {
@@ -669,7 +660,7 @@
       const week = document.getElementById('newItemWeek').value;
       if(!title) { alert('제목을 입력해주세요.'); return; }
       data.push({ id: Date.now(), title: title, week: week, subject: subject, link: link || null });
-      saveCurrentStateToFirebase(); render(currentMode); closeItemModal();
+      saveToStorage(); render(currentMode); closeItemModal();
     }
 
     function updateSidebarSubjects() {
@@ -797,44 +788,6 @@
       setDateTime(); setInterval(setDateTime, 1000);
     }
 
-    // 캘린더 기능 및 이벤트 설정
-    const officialEvents = [
-      { start: "2026-01-01", end: "2026-01-01", title: "☀️ 신정", type: "holiday" },
-      { start: "2026-03-01", end: "2026-03-01", title: "🇰🇷 삼일절", type: "holiday" },
-      { start: "2026-05-01", end: "2026-05-01", title: "💼 근로자의날(휴업일)", type: "holiday" },
-      { start: "2026-05-05", end: "2026-05-05", title: "🎈 어린이날", type: "holiday" },
-      { start: "2026-06-06", end: "2026-06-06", title: "🇰🇷 현충일", type: "holiday" },
-      { start: "2026-08-15", end: "2026-08-15", title: "🇰🇷 광복절", type: "holiday" },
-      { start: "2026-10-03", end: "2026-10-03", title: "🇰🇷 개천절", type: "holiday" },
-      { start: "2026-10-09", end: "2026-10-09", title: "🇰🇷 한글날", type: "holiday" },
-      { start: "2026-12-25", end: "2026-12-25", title: "🎄 성탄절", type: "holiday" },
-
-      { start: "2026-03-01", end: "2026-03-01", title: "1학기 개시일", type: "major" },
-      { start: "2026-03-03", end: "2026-03-03", title: "1학기 개강일", type: "major" },
-      { start: "2026-03-04", end: "2026-03-09", title: "1학기 수강신청변경기간", type: "major" },
-      { start: "2026-03-09", end: "2026-03-09", title: "개교기념일", type: "holiday" },
-      { start: "2026-03-09", end: "2026-03-09", title: "1학기 개강예배", type: "major" },
-      { start: "2026-04-06", end: "2026-04-10", title: "학생 부활절예배", type: "major" },
-      { start: "2026-04-06", end: "2026-04-06", title: "교직원 부활절예배", type: "major" },
-      { start: "2026-04-14", end: "2026-04-20", title: "중간 강의평가", type: "major" },
-      { start: "2026-04-21", end: "2026-04-27", title: "1학기 중간고사", type: "major" },
-      { start: "2026-05-18", end: "2026-05-22", title: "제50회 종합체육대회", type: "major" },
-      { start: "2026-05-27", end: "2026-05-29", title: "하계계절학기 수강신청", type: "major" },
-      { start: "2026-06-02", end: "2026-06-24", title: "1학기 강의평가", type: "major" },
-      { start: "2026-06-09", end: "2026-06-15", title: "1학기 기말고사", type: "major" },
-      { start: "2026-06-11", end: "2026-06-19", title: "1학기 성적평가·입력", type: "major" },
-      { start: "2026-06-16", end: "2026-08-31", title: "하계방학", type: "vacation" },
-      { start: "2026-06-16", end: "2026-07-13", title: "하계계절학기", type: "major" },
-      { start: "2026-06-22", end: "2026-06-24", title: "1학기 성적조회·이의신청", type: "major" },
-      { start: "2026-07-01", end: "2026-07-03", title: "2026-2학기 전과원서 접수", type: "major" },
-      { start: "2026-07-09", end: "2026-07-15", title: "하계계절학기 성적평가·입력", type: "major" },
-      { start: "2026-07-16", end: "2026-07-17", title: "하계계절학기 성적조회·이의신청", type: "major" },
-      { start: "2026-07-20", end: "2026-07-22", title: "2026-2학기 일반휴학 접수", type: "major" },
-      { start: "2026-07-27", end: "2026-07-29", title: "2026-2학기 복학ㆍ재입학·재등록 접수", type: "major" },
-      { start: "2026-08-11", end: "2026-08-14", title: "2학기 수강신청", type: "major" },
-      { start: "2026-08-21", end: "2026-08-21", title: "제51회 후기 학위수여식", type: "major" }
-    ];
-
     function openCalendarModal() { document.getElementById('calendarModal').classList.remove('hidden'); drawCalendarGrid(); }
     function closeCalendarModal() { document.getElementById('calendarModal').classList.add('hidden'); }
     function moveCalendarMonth(offset) { calDate.setMonth(calDate.getMonth() + offset); drawCalendarGrid(); }
@@ -849,7 +802,6 @@
       const gridContainer = document.getElementById('calendarDaysGrid'); gridContainer.innerHTML = '';
       const firstDayIndex = new Date(year, month, 1).getDay();
       const lastDate = new Date(year, month + 1, 0).getDate();
-
       for (let i = 0; i < firstDayIndex; i++) { gridContainer.innerHTML += `<div></div>`; }
       for (let day = 1; day <= lastDate; day++) {
         const fullDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -858,16 +810,13 @@
         const hasHolidayOrVacation = activeEvents.some(ev => ev.type === 'holiday' || ev.type === 'vacation');
         const hasMajorEvent = activeEvents.some(ev => ev.type === 'major');
         const hasCustom = personalEvents.some(ev => ev.date === fullDateStr);
-
         let colorClass = "text-on-surface"; let dotIndicator = "";
         if (weekday === 0 || weekday === 6 || hasHolidayOrVacation) { colorClass = "text-red-500 font-bold"; }
         else if (hasMajorEvent) { colorClass = "text-blue-500 font-bold"; }
         if(hasCustom) { dotIndicator = `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500 rounded-full"></span>`; }
-
         const todayObj = new Date();
         const isToday = todayObj.getFullYear() === year && todayObj.getMonth() === month && todayObj.getDate() === day;
         const todayStyle = isToday ? 'bg-primary/20 ring-2 ring-primary' : '';
-
         gridContainer.innerHTML += `
           <div onclick="selectCalendarDate('${fullDateStr}')" class="py-2.5 relative rounded-lg cursor-pointer hover:bg-secondary-container transition ${colorClass} ${todayStyle}">
             <span>${day}</span>${dotIndicator}
@@ -886,7 +835,6 @@
       const detailsContainer = document.getElementById('calendarEventDetails'); detailsContainer.innerHTML = '';
       const matchedOfficial = officialEvents.filter(ev => isDateInPeriod(dateStr, ev.start, ev.end));
       const matchedPersonal = personalEvents.filter(ev => ev.date === dateStr);
-
       if (matchedOfficial.length === 0 && matchedPersonal.length === 0) {
         detailsContainer.innerHTML = `<span class="text-on-surface-variant opacity-60 text-center my-auto">이날은 등록된 특이 일정이 없습니다.</span>`; return;
       }
@@ -894,7 +842,7 @@
         let badgeColor = "bg-blue-500 text-white"; if(ev.type === 'holiday' || ev.type === 'vacation') badgeColor = "bg-red-500 text-white";
         detailsContainer.innerHTML += `
           <div class="flex items-center gap-2 p-1.5 rounded bg-surface border border-ol-variant">
-            <span class="text-[10px] px-1 py-0.5 rounded ${badgeColor}">${ev.type === 'holiday' || ev.type === 'vacation' ? '휴일/방학' : '학교'}</span>
+            <span class="text-[10px] px-1 py-0.5 rounded ${badgeColor}">${ev.type === 'holiday' ? '공휴일' : '학교'}</span>
             <span class="font-medium text-on-surface">${ev.title}</span>
           </div>`;
       });
@@ -915,19 +863,21 @@
       const title = prompt(`[${selectedDateStr}]에 등록할 개인 일정명을 입력하세요:`);
       if(!title || !title.trim()) return;
       personalEvents.push({ id: Date.now(), date: selectedDateStr, title: title.trim() });
-      saveCurrentStateToFirebase(); drawCalendarGrid(); showDateDetails(selectedDateStr);
+      savePersonalEvents(); drawCalendarGrid(); showDateDetails(selectedDateStr);
     }
     function deletePersonalEvent(id, event) {
       if(event) event.stopPropagation();
       if(confirm("이 개인 일정을 삭제하시겠습니까?")) {
         personalEvents = personalEvents.filter(ev => ev.id !== id);
-        saveCurrentStateToFirebase(); drawCalendarGrid(); showDateDetails(selectedDateStr);
+        savePersonalEvents(); drawCalendarGrid(); showDateDetails(selectedDateStr);
       }
     }
 
     window.onload = () => {
       updateLiveDateTime();
-      // 데이터는 Firebase auth onAuthStateChanged 리스너 안에서 불러오므로 여기서 그리지 않습니다.
+      updateSidebarSubjects();
+      renderDDayList();
+      render('subject');
     };
   </script>
 </body>
