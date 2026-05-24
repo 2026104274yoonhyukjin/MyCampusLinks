@@ -929,8 +929,16 @@
       const board = document.getElementById('board'); const boardTitle = document.getElementById('boardTitle');
       board.innerHTML = ''; updateActiveMenu(mode);
 
-      let filtered = data;
-      if (searchQuery) filtered = data.filter(item => item.title.toLowerCase().includes(searchQuery) || item.subject.toLowerCase().includes(searchQuery) || item.week.toLowerCase().includes(searchQuery));
+      let filtered = [...data];
+      if (searchQuery) filtered = filtered.filter(item => item.title.toLowerCase().includes(searchQuery) || item.subject.toLowerCase().includes(searchQuery) || item.week.toLowerCase().includes(searchQuery));
+
+      // 🔥 [자동 정렬 추가] 항상 '주차(Week)' 숫자를 기준으로 오름차순 자동 정렬
+      filtered.sort((a, b) => {
+        const weekA = parseInt(a.week) || 0;
+        const weekB = parseInt(b.week) || 0;
+        if (weekA !== weekB) return weekA - weekB;
+        return a.id - b.id;
+      });
 
       if (mode === 'subject' || mode === 'week') {
         boardTitle.innerText = mode === 'week' ? "학사 주차별 타임라인 보드" : "내 과목별 타임라인 보드";
@@ -971,6 +979,14 @@
       board.innerHTML = ''; boardTitle.innerText = `과목 단독 보기: ${subjectName}`;
       let html = `<div class="bg-surface-c-low border border-ol-variant rounded-xl p-5 shadow-sm max-w-3xl mx-auto w-full"><div class="card-list flex flex-col gap-2.5">`;
       const filtered = data.filter(item => item.subject === subjectName && (!searchQuery || item.title.toLowerCase().includes(searchQuery)));
+
+      // 🔥 [자동 정렬 추가] 항상 '주차(Week)' 숫자를 기준으로 오름차순 자동 정렬
+      filtered.sort((a, b) => {
+        const weekA = parseInt(a.week) || 0;
+        const weekB = parseInt(b.week) || 0;
+        if (weekA !== weekB) return weekA - weekB;
+        return a.id - b.id;
+      });
       filtered.forEach(item => html += createCardHtml(item));
       if(filtered.length === 0) html += `<p class="text-center text-[13px] text-on-surface-variant py-4">등록 자료가 존재하지 않습니다.</p>`;
       html += `</div></div>`;
