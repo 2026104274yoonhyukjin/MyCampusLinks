@@ -502,6 +502,28 @@
           if(val) {
             subjects = val.subjects || []; data = val.data || [];
             ddayList = val.ddayList || []; personalEvents = val.personalEvents || [];
+            // 🔥 [자동 병합 처리] 띄어쓰기 문제로 분리된 과목을 하나로 합치기
+            const badSubject = "객체지향프로그래밍";
+            const goodSubject = "객체 지향 프로그래밍";
+            let needsMerge = false;
+
+            if (subjects.includes(badSubject)) {
+              subjects = subjects.filter(s => s !== badSubject);
+              if (!subjects.includes(goodSubject)) subjects.push(goodSubject);
+              needsMerge = true;
+            }
+
+            data.forEach(item => {
+              if (item.subject === badSubject) {
+                item.subject = goodSubject;
+                needsMerge = true;
+              }
+            });
+
+            if (needsMerge) {
+              saveCurrentStateToFirebase();
+            }
+
           } else {
             subjects = [...defaultSubjects]; data = [...defaultData];
             ddayList = [...defaultDDayList]; personalEvents = [];
