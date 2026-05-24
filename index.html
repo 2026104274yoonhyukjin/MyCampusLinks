@@ -88,6 +88,7 @@
     .dash-card:hover { transform: scale(1.03); box-shadow: 0 8px 24px rgba(67, 85, 185, 0.12); }
     .kanban-card::before { content: ""; display: inline-block; width: 14px; height: 10px; background: #f59e0b; border-radius: 2px; flex-shrink: 0; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 
 <body class="font-inter bg-surface text-on-surface min-h-screen">
@@ -581,13 +582,13 @@
       { id: 21, title: "10주차 3차시-인체(손,발)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/qHTTJ7woLNg" },
 
       // 객체 지향 프로그래밍
-      { id: 22, title: "1장 Java 프로그래밍 언어의 특징 및 동작 원리 이해", week: "1주차", subject: "객체 지향 프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf" },
-      { id: 23, title: "2장-자료형", week: "2주차", subject: "객체 지향 프로그래밍", link: "pdf/2장_자료형.pdf" },
-      { id: 24, title: "3장 연산자", week: "3주차", subject: "객체 지향 프로그래밍", link: "pdf/3장_연산자.pdf" },
-      { id: 25, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체 지향 프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf" },
-      { id: 26, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf" },
-      { id: 27, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf" },
-      { id: 28, title: "7장-클래스 내부 구성요소(필드메서드생성자)", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf" },
+      { id: 22, title: "1장 Java 프로그래밍 언어의 특징 및 동작 원리 이해", week: "1주차", subject: "객체지향프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf" },
+      { id: 23, title: "2장-자료형", week: "2주차", subject: "객체지향프로그래밍", link: "pdf/2장_자료형.pdf" },
+      { id: 24, title: "3장 연산자", week: "3주차", subject: "객체지향프로그래밍", link: "pdf/3장_연산자.pdf" },
+      { id: 25, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체지향프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf" },
+      { id: 26, title: "5장-참조자료형", week: "5주차", subject: "객체지향프로그래밍", link: "pdf/5장_참조자료형.pdf" },
+      { id: 27, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체지향프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf" },
+      { id: 28, title: "7장-클래스 내부 구성요소(필드메서드생성자)", week: "7주차", subject: "객체지향프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf" },
 
       // 프론트엔드프로그래밍
       { id: 29, title: "OT 자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT" },
@@ -850,11 +851,36 @@
       if(!container) return; container.innerHTML = '';
       subjects.forEach(sub => {
         container.innerHTML += `
-          <div class="group flex items-center justify-between gap-1 px-4 py-1.5 rounded hover:bg-secondary-container text-[13px] text-on-surface">
-            <span onclick="renderSubjectDetail('${sub}')" class="cursor-pointer font-medium truncate flex-1">📚 ${sub}</span>
+          <div data-id="${sub}" class="group flex items-center justify-between gap-1 px-4 py-1.5 rounded hover:bg-secondary-container text-[13px] text-on-surface cursor-move select-none active:bg-surface-c-high transition-colors">
+            <span class="text-on-surface-variant opacity-40 cursor-move mr-1">☰</span>
+            <span onclick="renderSubjectDetail('${sub}')" class="cursor-pointer font-medium truncate flex-1 hover:text-primary">📚 ${sub}</span>
             <button onclick="removeSubject('${sub}')" class="opacity-0 group-hover:opacity-100 text-[11px] text-error hover:font-bold px-1 transition">✕</button>
           </div>`;
       });
+
+      // Drag and Drop 기능 초기화
+      if(window.subjectSortable) window.subjectSortable.destroy();
+      if(typeof Sortable !== 'undefined') {
+        window.subjectSortable = new Sortable(container, {
+          animation: 150,
+          ghostClass: 'opacity-50', // 드래그 중인 아이템 스타일
+          onEnd: function (evt) {
+            if (evt.oldIndex === evt.newIndex) return;
+            // 배열 순서 업데이트
+            const movedItem = subjects.splice(evt.oldIndex, 1)[0];
+            subjects.splice(evt.newIndex, 0, movedItem);
+            // Firebase 서버에 변경된 순서 저장
+            saveCurrentStateToFirebase();
+
+            // 메인 대시보드 화면도 새로운 순서에 맞게 새로고침
+            if (['subject', 'week', 'all'].includes(currentMode)) {
+              render(currentMode);
+            } else if (currentMode !== 'community') {
+              renderSubjectDetail(currentMode);
+            }
+          }
+        });
+      }
     }
 
     function renderDDayList() {
