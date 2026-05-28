@@ -4,29 +4,7 @@
   <meta charset="UTF-8">   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">   
   <title>MYCAMPUSLINKS — 통합 대시보드 & 광장</title>   
-  <script src="https://cdn.tailwindcss.com">
-function submitReply(postKey){
-  if(!currentUser){ alert('로그인이 필요합니다.'); return; }
-  const input = document.getElementById('reply-input-'+postKey);
-  if(!input || !input.value.trim()) return;
-  database.ref('global_community/' + postKey + '/replies').push({
-    uid: currentUser.uid,
-    nickname: currentUser.displayName || currentUser.email.split('@')[0] + ' 학우',
-    text: input.value.trim(),
-    timestamp: firebase.database.ServerValue.TIMESTAMP
-  }).then(()=> input.value='');
-}
-
-function togglePostLike(postKey){
-  if(!currentUser){ alert('로그인이 필요합니다.'); return; }
-  const ref = database.ref('global_community/' + postKey + '/likes/' + currentUser.uid);
-  ref.once('value').then(snap=>{
-    if(snap.exists()) ref.remove();
-    else ref.set(true);
-  });
-}
-
-</script>   
+  <script src="https://cdn.tailwindcss.com"></script>   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">    
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>   
@@ -69,33 +47,6 @@ function togglePostLike(postKey){
         }       
       }     
     }   
-
-    function toggleReplyLike(postKey, replyKey) {
-      if (!currentUser) { alert("로그인이 필요한 기능입니다."); return; }
-      const ref = database.ref('global_community/' + postKey + '/replies/' + replyKey + '/likes/' + currentUser.uid);
-      ref.once('value').then(snap => {
-        if (snap.exists()) ref.remove();
-        else ref.set(true);
-      });
-    }
-
-    function editReply(postKey, replyKey, oldText) {
-      const edited = prompt("댓글을 수정해 주세요:", oldText);
-      if (edited === null) return;
-      const finalEdited = edited.trim();
-      if (!finalEdited) { alert("공백은 등록 불가합니다."); return; }
-      database.ref('global_community/' + postKey + '/replies/' + replyKey).update({
-        text: finalEdited,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      }).catch(e => alert(e.message));
-    }
-
-
-    function setSubjectFilter(subjectName) {
-      currentSubjectFilter = currentSubjectFilter === subjectName ? null : subjectName;
-      render('subject');
-    }
-
   </script>   
   
   <style>     
@@ -358,31 +309,29 @@ function togglePostLike(postKey){
             <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드 (꾹 눌러서 이동)</p>           
           </div>           
           
-          <div class="flex flex-wrap items-center gap-2">             
-            <div class="flex items-center gap-2 bg-surface-c-low border border-ol-variant p-1 rounded-xl shadow-sm">
-              <select id="subjectFilterSelect" onchange="handleDetailedFilter()" class="px-2 py-1.5 text-[12px] font-bold rounded-lg border-none bg-transparent text-on-surface focus:outline-none min-w-[100px]">
-                <option value="">모든 과목 ⬇️</option>
+          <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2">             
+            <div id="categorySearchBar" class="hidden flex items-center gap-2">
+              <select id="filterSubject" onchange="render(currentMode)" class="px-3 py-1.5 text-[13px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary max-w-[150px] truncate">
+                <option value="all">모든 과목</option>
               </select>
-              <div class="w-[1px] h-4 bg-ol-variant"></div>
-              <select id="weekFilterSelect" onchange="handleDetailedFilter()" class="px-2 py-1.5 text-[12px] font-bold rounded-lg border-none bg-transparent text-on-surface focus:outline-none min-w-[80px]">
-                <option value="">모든 주차 ⬇️</option>
+              <select id="filterWeek" onchange="render(currentMode)" class="px-3 py-1.5 text-[13px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary max-w-[120px] truncate">
+                <option value="all">모든 주차</option>
                 <option value="상시">상시</option>
                 <option value="1주차">1주차</option><option value="2주차">2주차</option><option value="3주차">3주차</option><option value="4주차">4주차</option>
                 <option value="5주차">5주차</option><option value="6주차">6주차</option><option value="7주차">7주차</option><option value="8주차">8주차</option>
                 <option value="9주차">9주차</option><option value="10주차">10주차</option><option value="11주차">11주차</option><option value="12주차">12주차</option>
                 <option value="13주차">13주차</option><option value="14주차">14주차</option><option value="15주차">15주차</option>
               </select>
-              <div class="w-[1px] h-4 bg-ol-variant"></div>
-              <select id="sortOrderSelect" onchange="handleDetailedFilter()" class="px-2 py-1.5 text-[12px] font-bold rounded-lg border-none bg-transparent text-on-surface focus:outline-none min-w-[90px]">
-                <option value="smart">스마트 정렬</option>
+              <select id="filterSort" onchange="render(currentMode)" class="px-3 py-1.5 text-[13px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary max-w-[120px] truncate">
                 <option value="newest">최신순</option>
-                <option value="oldest">오래된순</option>
+                <option value="oldest">오래된 순</option>
               </select>
             </div>
-            <button onclick="restoreDefaultData()" class="px-3 py-2 text-[12px] font-bold rounded-xl border border-primary text-primary bg-primary-fixed hover:bg-primary hover:text-white transition-all shadow-sm shrink-0">               
+            
+            <button onclick="restoreDefaultData()" class="px-3 py-1.5 text-[12px] font-bold rounded-lg border border-primary text-primary bg-primary-fixed hover:bg-primary hover:text-white transition-all shadow-sm shrink-0">               
               🔄 기본 자료 복구             
             </button>           
-          </div>
+          </div>         
         </div>         
         
         <div id="board" class="w-full flex-1 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar pb-10"></div>       
@@ -643,62 +592,58 @@ function togglePostLike(postKey){
     let personalEvents = [];
     let apps = [];      
     let currentMode = 'subject'; 
-    let currentSubjectFilter = null;
     let searchQuery = ''; 
     let calDate = new Date(); 
     let selectedDateStr = '';
     let activeReviewFilter = null;      
-    let activeSubjectFilter = '';
-    let activeWeekFilter = '';
-    let currentSortOrder = 'smart';
     
     const defaultSubjects = ["게임프로그래밍","게임그래픽 기초","객체 지향 프로그래밍", "프론트엔드프로그래밍"];
     const defaultData = [
-      { id: 10001, title: "C# 프로그래밍 첫걸음 (Chapter 01)", week: "1주차", subject: "게임프로그래밍", link: "pdf/ch01.pdf", type: "file", tags: "게임프로그래밍, 1주차, 기초, 이론, PDF" },
-      { id: 10002, title: "기본 문법 (Chapter 02)", week: "2주차", subject: "게임프로그래밍", link: "pdf/ch02.pdf", type: "file", tags: "게임프로그래밍, 2주차, 문법, PDF" },
-      { id: 10003, title: "조건문 (Chapter 03)", week: "3주차", subject: "게임프로그래밍", link: "pdf/ch03.pdf", type: "file", tags: "게임프로그래밍, 3주차, 제어문, PDF" },
-      { id: 10004, title: "반복문 (Chapter 04)", week: "4주차", subject: "게임프로그래밍", link: "pdf/ch04.pdf", type: "file", tags: "게임프로그래밍, 4주차, 제어문, PDF" },
-      { id: 10005, title: "클래스 기본 (Chapter 05)", week: "5주차", subject: "게임프로그래밍", link: "pdf/ch05.pdf", type: "file", tags: "게임프로그래밍, 5주차, 객체지향, PDF" },
-      { id: 10006, title: "메서드 (Chapter 06)", week: "6주차", subject: "게임프로그래밍", link: "pdf/ch06.pdf", type: "file", tags: "게임프로그래밍, 6주차, 객체지향, PDF" },
-      { id: 10007, title: "상속과 다형성 (Chapter 07)", week: "7주차", subject: "게임프로그래밍", link: "pdf/ch07.pdf", type: "file", tags: "게임프로그래밍, 7주차, 객체지향, 심화, PDF" },
+      { id: 1, title: "C# 프로그래밍 첫걸음 (Chapter 01)", week: "1주차", subject: "게임프로그래밍", link: "pdf/ch01.pdf", type: "file", tags: "기초, 이론, PDF" },
+      { id: 2, title: "기본 문법 (Chapter 02)", week: "2주차", subject: "게임프로그래밍", link: "pdf/ch02.pdf", type: "file", tags: "문법, PDF" },
+      { id: 3, title: "조건문 (Chapter 03)", week: "3주차", subject: "게임프로그래밍", link: "pdf/ch03.pdf", type: "file", tags: "제어문, PDF" },
+      { id: 4, title: "반복문 (Chapter 04)", week: "4주차", subject: "게임프로그래밍", link: "pdf/ch04.pdf", type: "file", tags: "제어문, PDF" },
+      { id: 5, title: "클래스 기본 (Chapter 05)", week: "5주차", subject: "게임프로그래밍", link: "pdf/ch05.pdf", type: "file", tags: "객체지향, PDF" },
+      { id: 6, title: "메서드 (Chapter 06)", week: "6주차", subject: "게임프로그래밍", link: "pdf/ch06.pdf", type: "file", tags: "객체지향, PDF" },
+      { id: 7, title: "상속과 다형성 (Chapter 07)", week: "7주차", subject: "게임프로그래밍", link: "pdf/ch07.pdf", type: "file", tags: "객체지향, 심화, PDF" },
       
-      { id: 10008, title: "3주차-컵", week: "3주차", subject: "게임그래픽 기초", link: "https://youtu.be/0V7-B76oDb0?si=PeFMPxFw7EPmTvIX", type: "video", tags: "게임그래픽 기초, 3주차, 모델링, 유튜브" },
-      { id: 10009, title: "4주차 2차시-접시,스푼", week: "4주차", subject: "게임그래픽 기초", link: "https://youtu.be/v0lMKBo34ds?si=vzMUhstLUf5vWyTm", type: "video", tags: "게임그래픽 기초, 4주차, 모델링, 유튜브" },
-      { id: 10010, title: "5주차 1차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/JWFie9eDkGA?si=SR5KlKnALQNkAJ1U", type: "video", tags: "게임그래픽 기초, 5주차, 편집, 유튜브" },
-      { id: 10011, title: "5주차 2차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/BPHuUT0zoKI?si=2E8zRt2wzCqVUpap", type: "video", tags: "게임그래픽 기초, 5주차, 편집, 유튜브" },
-      { id: 10012, title: "5주차 3차시-검,철퇴", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/XvxTYsfnPpI", type: "video", tags: "게임그래픽 기초, 5주차, 무기제작, 유튜브" },
-      { id: 10013, title: "6주차 1차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/KA9KfMoQhTg?si=pnl3XBBT_rgUec8K", type: "video", tags: "게임그래픽 기초, 6주차, 축정렬, 유튜브" },
-      { id: 10014, title: "6주차 2차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/DL9LDpRodEg", type: "video", tags: "게임그래픽 기초, 6주차, 축정렬, 유튜브" },
-      { id: 10015, title: "6주차 3차시-Reset X Form", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/l6c1epTtNVk?si=9LZOjTp8TjOGZvCa", type: "video", tags: "게임그래픽 기초, 6주차, 축정렬, 유튜브" },
-      { id: 10016, title: "7주차 1차시-캐릭터(몸통)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/oy9rC6YQwfQ?si=iIa3w4etvMySTjXi", type: "video", tags: "게임그래픽 기초, 7주차, 캐릭터, 유튜브" },
-      { id: 10017, title: "7주차 2차시-캐릭터(팔)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/tt-hxXzbWu8?si=zoXrVXOO1LYpQBLW", type: "video", tags: "게임그래픽 기초, 7주차, 캐릭터, 유튜브" },
-      { id: 10018, title: "7주차 3차시-캐릭터(다리,이빨)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/n9sNFonoh4g?si=fC5kPi6sG7FPzMVS", type: "video", tags: "게임그래픽 기초, 7주차, 캐릭터, 유튜브" },
-      { id: 10019, title: "10주차 1차시-인체 캐릭터 특징분석", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/IEzmA-YC7bs?si=AUfPz_gkkBLHrNdx", type: "video", tags: "게임그래픽 기초, 10주차, 인체, 이론, 유튜브" },
-      { id: 10020, title: "10주차 2차시-인체(몸통)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/m-Mxw36Ybjk?si=adOxKKQ5pC4pPPmL", type: "video", tags: "게임그래픽 기초, 10주차, 인체, 유튜브" },
-      { id: 10021, title: "10주차 3차시-인체(팔,다리)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/TgfCel9AQlI?si=LfxVTI1xvs_B8Gcc", type: "video", tags: "게임그래픽 기초, 10주차, 인체, 유튜브" },
-      { id: 10022, title: "12주차 1차시-인체(손,발)", week: "12주차", subject: "게임그래픽 기초", link: "https://youtu.be/qHTTJ7woLNg", type: "video", tags: "게임그래픽 기초, 12주차, 인체, 유튜브" },
+      { id: 8, title: "3주차-컵", week: "3주차", subject: "게임그래픽 기초", link: "https://youtu.be/0V7-B76oDb0?si=PeFMPxFw7EPmTvIX", type: "video", tags: "모델링, 유튜브" },
+      { id: 9, title: "4주차 2차시-접시,스푼", week: "4주차", subject: "게임그래픽 기초", link: "https://youtu.be/v0lMKBo34ds?si=vzMUhstLUf5vWyTm", type: "video", tags: "모델링, 유튜브" },
+      { id: 10, title: "5주차 1차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/JWFie9eDkGA?si=SR5KlKnALQNkAJ1U", type: "video", tags: "편집, 유튜브" },
+      { id: 11, title: "5주차 2차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/BPHuUT0zoKI?si=2E8zRt2wzCqVUpap", type: "video", tags: "편집, 유튜브" },
+      { id: 12, title: "5주차 3차시-검,철퇴", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/XvxTYsfnPpI", type: "video", tags: "무기제작, 유튜브" },
+      { id: 13, title: "6주차 1차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/KA9KfMoQhTg?si=pnl3XBBT_rgUec8K", type: "video", tags: "축정렬, 유튜브" },
+      { id: 14, title: "6주차 2차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/DL9LDpRodEg", type: "video", tags: "축정렬, 유튜브" },
+      { id: 15, title: "6주차 3차시-Reset X Form", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/l6c1epTtNVk?si=9LZOjTp8TjOGZvCa", type: "video", tags: "축정렬, 유튜브" },
+      { id: 16, title: "7주차 1차시-캐릭터(몸통)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/oy9rC6YQwfQ?si=iIa3w4etvMySTjXi", type: "video", tags: "캐릭터, 유튜브" },
+      { id: 17, title: "7주차 2차시-캐릭터(팔)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/tt-hxXzbWu8?si=zoXrVXOO1LYpQBLW", type: "video", tags: "캐릭터, 유튜브" },
+      { id: 18, title: "7주차 3차시-캐릭터(다리,이빨)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/n9sNFonoh4g?si=fC5kPi6sG7FPzMVS", type: "video", tags: "캐릭터, 유튜브" },
+      { id: 19, title: "10주차 1차시-인체 캐릭터 특징분석", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/IEzmA-YC7bs?si=AUfPz_gkkBLHrNdx", type: "video", tags: "인체, 이론, 유튜브" },
+      { id: 20, title: "10주차 2차시-인체(몸통)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/m-Mxw36Ybjk?si=adOxKKQ5pC4pPPmL", type: "video", tags: "인체, 유튜브" },
+      { id: 21, title: "10주차 3차시-인체(팔,다리)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/TgfCel9AQlI?si=LfxVTI1xvs_B8Gcc", type: "video", tags: "인체, 유튜브" },
+      { id: 22, title: "12주차 1차시-인체(손,발)", week: "12주차", subject: "게임그래픽 기초", link: "https://youtu.be/qHTTJ7woLNg", type: "video", tags: "인체, 유튜브" },
       
-      { id: 10023, title: "1장 Java 프로그래밍 언어의 특징", week: "1주차", subject: "객체 지향 프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf", type: "file", tags: "객체 지향 프로그래밍, 1주차, Java, 기초, PDF" },
-      { id: 10024, title: "2장-자료형", week: "2주차", subject: "객체 지향 프로그래밍", link: "pdf/2장_자료형.pdf", type: "file", tags: "객체 지향 프로그래밍, 2주차, Java, 자료형, PDF" },
-      { id: 10025, title: "3장 연산자", week: "3주차", subject: "객체 지향 프로그래밍", link: "pdf/3장_연산자.pdf", type: "file", tags: "객체 지향 프로그래밍, 3주차, Java, 기초, PDF" },
-      { id: 10026, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체 지향 프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf", type: "file", tags: "객체 지향 프로그래밍, 4주차, Java, 제어문, PDF" },
-      { id: 10027, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf", type: "file", tags: "객체 지향 프로그래밍, 5주차, Java, 참조, PDF" },
-      { id: 10028, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file", tags: "객체 지향 프로그래밍, 6주차, Java, 클래스, PDF" },
-      { id: 10029, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file", tags: "객체 지향 프로그래밍, 7주차, Java, 클래스, PDF" },
-      { id: 10030, title: "8장-클래스의 외부 구성요소", week: "8주차", subject: "객체 지향 프로그래밍", link: "pdf/8장_클래스의_외부_구성요소_(package_import_외부클래스).pdf", type: "file", tags: "객체 지향 프로그래밍, 8주차, Java, 패키지, PDF" },
-      { id: 10031, title: "9장-자바제어자(modifier)_1", week: "9주차", subject: "객체 지향 프로그래밍", link: "pdf/9장__자바제어자(modifier)_1._(접근지정자_static).pdf", type: "file", tags: "객체 지향 프로그래밍, 9주차, Java, 제어자, PDF" },
+      { id: 23, title: "1장 Java 프로그래밍 언어의 특징", week: "1주차", subject: "객체 지향 프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf", type: "file", tags: "Java, 기초, PDF" },
+      { id: 24, title: "2장-자료형", week: "2주차", subject: "객체 지향 프로그래밍", link: "pdf/2장_자료형.pdf", type: "file", tags: "Java, 자료형, PDF" },
+      { id: 25, title: "3장 연산자", week: "3주차", subject: "객체 지향 프로그래밍", link: "pdf/3장_연산자.pdf", type: "file", tags: "Java, 기초, PDF" },
+      { id: 26, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체 지향 프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf", type: "file", tags: "Java, 제어문, PDF" },
+      { id: 27, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf", type: "file", tags: "Java, 참조, PDF" },
+      { id: 28, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file", tags: "Java, 클래스, PDF" },
+      { id: 29, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file", tags: "Java, 클래스, PDF" },
+      { id: 30, title: "8장-클래스의 외부 구성요소", week: "8주차", subject: "객체 지향 프로그래밍", link: "pdf/8장_클래스의_외부_구성요소_(package_import_외부클래스).pdf", type: "file", tags: "Java, 패키지, PDF" },
+      { id: 31, title: "9장-자바제어자(modifier)_1", week: "9주차", subject: "객체 지향 프로그래밍", link: "pdf/9장__자바제어자(modifier)_1._(접근지정자_static).pdf", type: "file", tags: "Java, 제어자, PDF" },
       
-      { id: 10032, title: "OT 자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT", type: "web", tags: "프론트엔드프로그래밍, 1주차, 오리엔테이션" },
-      { id: 10033, title: "마크다운 작성방법 참고자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "pdf/마크다운_보충자료.pdf", type: "file", tags: "프론트엔드프로그래밍, 1주차, 마크다운, PDF" },
-      { id: 10034, title: "3주차 수업 자료-HTML Form & UI", week: "3주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week3", type: "web", tags: "프론트엔드프로그래밍, 3주차, HTML, UI" },
-      { id: 10035, title: "4주차 수업 자료-CSS 스타일링 & GitHub 배포", week: "4주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week4", type: "web", tags: "프론트엔드프로그래밍, 4주차, CSS, GitHub" },
-      { id: 10036, title: "5주차 수업 자료-CSS Layout & 팀 협업", week: "5주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week5", type: "web", tags: "프론트엔드프로그래밍, 5주차, CSS, Layout" },
-      { id: 10037, title: "6주차 수업 자료-Flexbox & 반응형 웹", week: "6주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week6", type: "web", tags: "프론트엔드프로그래밍, 6주차, CSS, 반응형" },
-      { id: 10038, title: "7주차 수업 자료-Grid 레이아웃 & 동적 애니메이션", week: "7주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week7", type: "web", tags: "프론트엔드프로그래밍, 7주차, CSS, 애니메이션" },
-      { id: 10039, title: "10주차 수업 자료-실전 팀 빌딩 & README 기반 Git 협업", week: "10주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week10", type: "web", tags: "프론트엔드프로그래밍, 10주차, Git, 팀프로젝트" },
-      { id: 10040, title: "11주차 수업 자료-개발 착수 & MVP 기반 태스크 관리", week: "11주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week11", type: "web", tags: "프론트엔드프로그래밍, 11주차, MVP, 프로젝트" },
-      { id: 10041, title: "12주차 수업 자료-MVP 통합 및 알파 버전 완성", week: "12주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week12", type: "web", tags: "프론트엔드프로그래밍, 12주차, MVP, 프로젝트" },
-      { id: 10042, title: "13주차 수업 자료-알파 테스트 피드백 보드", week: "13주차", subject: "프론트엔드프로그래밍", link: "https://www.figma.com/board/XTQk7MT9MuRqokMwAeNRS2/%ED%94%BC%EB%93%9C%EB%B0%B1%EB%B3%B4%EB%93%9C-103-?node-id=0-1&p=f&t=4exAxS5NEkhzxOV3-02", type: "web", tags: "프론트엔드프로그래밍, 13주차, Figma, 피드백" }
+      { id: 32, title: "OT 자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT", type: "web", tags: "오리엔테이션" },
+      { id: 33, title: "마크다운 작성방법 참고자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "pdf/마크다운_보충자료.pdf", type: "file", tags: "마크다운, PDF" },
+      { id: 34, title: "3주차 수업 자료-HTML Form & UI", week: "3주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week3", type: "web", tags: "HTML, UI" },
+      { id: 35, title: "4주차 수업 자료-CSS 스타일링 & GitHub 배포", week: "4주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week4", type: "web", tags: "CSS, GitHub" },
+      { id: 36, title: "5주차 수업 자료-CSS Layout & 팀 협업", week: "5주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week5", type: "web", tags: "CSS, Layout" },
+      { id: 37, title: "6주차 수업 자료-Flexbox & 반응형 웹", week: "6주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week6", type: "web", tags: "CSS, 반응형" },
+      { id: 38, title: "7주차 수업 자료-Grid 레이아웃 & 동적 애니메이션", week: "7주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week7", type: "web", tags: "CSS, 애니메이션" },
+      { id: 39, title: "10주차 수업 자료-실전 팀 빌딩 & README 기반 Git 협업", week: "10주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week10", type: "web", tags: "Git, 팀프로젝트" },
+      { id: 40, title: "11주차 수업 자료-개발 착수 & MVP 기반 태스크 관리", week: "11주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week11", type: "web", tags: "MVP, 프로젝트" },
+      { id: 41, title: "12주차 수업 자료-MVP 통합 및 알파 버전 완성", week: "12주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week12", type: "web", tags: "MVP, 프로젝트" },
+      { id: 42, title: "13주차 수업 자료-알파 테스트 피드백 보드", week: "13주차", subject: "프론트엔드프로그래밍", link: "https://www.figma.com/board/XTQk7MT9MuRqokMwAeNRS2/%ED%94%BC%EB%93%9C%EB%B0%B1%EB%B3%B4%EB%93%9C-103-?node-id=0-1&p=f&t=4exAxS5NEkhzxOV3-02", type: "web", tags: "Figma, 피드백" }
     ];
 
     const defaultDDayList = [{ id: 1001, title: "기말고사 및 종강", date: "2026-06-15" }];
@@ -1002,7 +947,6 @@ function togglePostLike(postKey){
     }      
     
     function submitCommunityPost() {       
-      if(!currentUser){ alert('로그인이 필요합니다.'); return; }
       const input = document.getElementById('communityPostInput');       
       if(!input || !input.value.trim()) return;       
       const content = input.value.trim();        
@@ -1187,89 +1131,25 @@ function togglePostLike(postKey){
       }
     }      
     
-    // 스마트 정렬 함수 (OT -> 1장 -> 2장 ... 또는 1주차 -> 2주차 순서 보장)
-    function smartSort(a, b) {
-      // 주차 정렬 우선 (숫자만 추출하여 비교)
-      const getWeekNum = (w) => {
-        if (w === '상시') return 0;
-        const m = (w || '').match(/\d+/);
-        return m ? parseInt(m[0]) : 999;
-      };
-      const weekA = getWeekNum(a.week);
-      const weekB = getWeekNum(b.week);
-      
-      if (weekA !== weekB) return weekA - weekB;
-
-      // 제목 내 숫자 추출 (예: "1장", "2장", "3주차")
-      const getNumber = (str) => {
-        if (!str) return 999;
-        const lower = str.toLowerCase();
-        if (lower.includes('ot')) return -1; // OT는 맨 앞으로
-        if (lower.includes('마크다운')) return 0; // 마크다운은 OT 다음으로
-        const match = str.match(/\d+/);
-        return match ? parseInt(match[0]) : 999;
-      };
-
-      const numA = getNumber(a.title);
-      const numB = getNumber(b.title);
-
-      if (numA !== numB) return numA - numB;
-      
-      // 숫자가 같거나 없는 경우 사전순
-      return (a.title || '').localeCompare(b.title || '');
-    }
-
     function restoreDefaultData() {       
       if(confirm('기본 탑재 고정형 수업자료를 복구하여 추가하시겠습니까? (내 자료 유지)')) {         
-        // 1. 과목 복구 (중복 제외)
-        defaultSubjects.forEach(s => { 
-          if(!subjects.includes(s)) subjects.push(s); 
-        });         
-        
-        // 2. 수업 자료 복구 (제목 기반 중복 체크 강화)
-        defaultData.forEach(d => { 
-          // 제목에서 공백 제거 후 비교하여 중복 체크
-          const cleanTitle = (t) => (t || '').replace(/\s+/g, '');
-          const dTitle = cleanTitle(d.title);
-          
-          const existingItem = data.find(x => cleanTitle(x.title) === dTitle);
-          
-          if(!existingItem) {
-            // 아예 없는 경우 새로 추가
-            data.push(JSON.parse(JSON.stringify(d)));
-          } else {
-            // 이미 있는 경우: 북마크 상태는 유지하면서 나머지 정보만 업데이트
-            const currentBookmark = existingItem.bookmark;
-            Object.assign(existingItem, JSON.parse(JSON.stringify(d)));
-            existingItem.bookmark = currentBookmark;
-          }
-        });         
-        
-        // 정렬 상태 강제 적용
-        data.sort(smartSort);
-
-        // 3. D-Day 복구
+        defaultSubjects.forEach(s => { if(!subjects.includes(s)) subjects.push(s); });         
+        defaultData.forEach(d => { if(!data.some(x => x.title === d.title)) data.push(d); });         
         defaultDDayList.forEach(d => { 
           if(!ddayList.some(x => x.title === d.title)) {
-            ddayList.push({ id: d.id || Date.now(), title: d.title, date: d.date });
+            ddayList.push({ id: Date.now() + Math.floor(Math.random() * 1000), title: d.title, date: d.date });
           }
         });
-        
-        // 4. 앱 복구
-        defaultApps.forEach(a => { 
-          if(!apps.some(x => x.title === a.title)) {
-            apps.push(JSON.parse(JSON.stringify(a)));
-          } 
-        });
+        defaultApps.forEach(a => { if(!apps.some(x => x.title === a.title)) apps.push(a); });
         
         saveCurrentStateToFirebase(); 
         updateSidebarSubjects(); 
         renderApps();
         renderDDayList();
         render(currentMode); 
-        alert('복구가 완료되었습니다. 북마크가 유지되고 순서가 정렬되었습니다.');       
+        alert('복구가 성료되었습니다.');       
       }     
-    }
+    }      
     
     function updateSidebarSubjects() {       
       const container = document.getElementById('sidebarSubjectList');       
@@ -1296,7 +1176,7 @@ function togglePostLike(postKey){
             subjects.splice(evt.newIndex, 0, movedItem);
             saveCurrentStateToFirebase();
             
-            if (['subject', 'week', 'all', 'etc', 'bookmark'].includes(currentMode)) {
+            if (['subject', 'all', 'etc', 'bookmark'].includes(currentMode)) {
               render(currentMode);
             } else if (currentMode !== 'community') {
               renderSubjectDetail(currentMode);
@@ -1332,44 +1212,35 @@ function togglePostLike(postKey){
       searchQuery = document.getElementById(isMobile ? 'mobileSearchInput' : 'searchInput').value.toLowerCase().trim();       
       if(currentMode !== 'community' && currentMode !== 'etc' && currentMode !== 'bookmark') render(currentMode);     
     }      
-    
-    function handleDetailedFilter() {
-      activeSubjectFilter = document.getElementById('subjectFilterSelect').value;
-      activeWeekFilter = document.getElementById('weekFilterSelect').value;
-      currentSortOrder = document.getElementById('sortOrderSelect').value;
-      render(currentMode);
-    }
 
-    function updateFilterOptions() {
-      const subSelect = document.getElementById('subjectFilterSelect');
-      if (subSelect) {
-        const current = subSelect.value;
-        subSelect.innerHTML = '<option value="">모든 과목 ⬇️</option>';
-        subjects.forEach(sub => {
-          subSelect.innerHTML += `<option value="${sub}" ${sub === current ? 'selected' : ''}>${sub}</option>`;
-        });
+    function updateFilterSubjectOptions() {
+      const select = document.getElementById('filterSubject');
+      if (!select) return;
+      const currentVal = select.value;
+      select.innerHTML = '<option value="all">모든 과목</option>';
+      subjects.forEach(s => {
+        select.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+      if (subjects.includes(currentVal) || currentVal === 'all') {
+        select.value = currentVal;
       }
     }
 
-    // ✅ 북마크 토글 로직 (부분 업데이트 방식 - 전체 렌더링 없음)
+    // ✅ 북마크 토글 로직 
     function toggleBookmark(id, event) {
       if(event) {
         event.stopPropagation();
         event.preventDefault();
       }
-      
       const item = data.find(x => x.id === id);
       if(!item) return;
       
-      // 북마크 상태 토글
       item.bookmark = !item.bookmark;
       saveCurrentStateToFirebase();
       
-      // 해당 카드 요소 찾기 (data-id 속성으로)
       const cardElement = document.querySelector('[data-id="' + id + '"]');
       if(!cardElement) return;
       
-      // 카드 내의 북마크 버튼만 업데이트 (부분 렌더링)
       const bookmarkBtn = cardElement.querySelector('button[title="즐겨찾기"]');
       if(bookmarkBtn) {
         const starIcon = item.bookmark ? '⭐️' : '☆';
@@ -1378,7 +1249,6 @@ function togglePostLike(postKey){
         bookmarkBtn.className = 'relative z-10 text-[14px] p-1 rounded transition-transform ' + starClass;
       }
       
-      // 북마크 보관함 모드일 때만 전체 렌더링
       if(currentMode === 'bookmark') {
         render('bookmark');
       }
@@ -1390,11 +1260,9 @@ function togglePostLike(postKey){
         event.preventDefault();
       }       
       if(confirm('이 자료집 항목을 삭제할까요?')) { 
-        // 데이터에서 삭제
         data = data.filter(x => x.id !== id); 
         saveCurrentStateToFirebase(); 
         
-        // 카드 요소 제거 (부분 렌더링)
         const cardElement = document.querySelector('[data-id="' + id + '"]');
         if(cardElement) {
           cardElement.style.opacity = '0';
@@ -1408,20 +1276,7 @@ function togglePostLike(postKey){
       }     
     }
 
-        // requestAnimationFrame을 사용하여 렌더링 완료 후 스크롤 복구
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo(0, windowScroll);
-            const newBoard = document.getElementById('board');
-            if (newBoard) newBoard.scrollTop = boardScroll;
-            document.querySelectorAll('.card-list').forEach(list => {
-              const key = list.getAttribute('data-filter-key');
-              if(key && scrollMap[key] !== undefined) list.scrollTop = scrollMap[key];
-            });
-          });
-        });
-      
-    // ✅ 원본 가로형 레이아웃 복구 + 아이콘 겹침 방지(z-10) 추가
+    // ✅ 카드 생성 HTML
     function createCardHtml(item) {       
       const isBookmarked = item.bookmark;
       const starIcon = isBookmarked ? '⭐️' : '☆';
@@ -1440,12 +1295,6 @@ function togglePostLike(postKey){
         else if((item.link || '').includes('youtu')) typeIcon = '▶️';
       }
 
-      let tagsHtml = '';
-      if(item.tags) {
-         const tagArr = item.tags.split(',').map(t => t.trim()).filter(t => t);
-         tagsHtml = tagArr.map(t => `<span class="text-[9px] px-1.5 py-0.5 rounded bg-surface-dim text-on-surface-variant border border-ol-variant">#${t}</span>`).join('');
-      }
-
       let descHtml = '';
       if(item.desc) descHtml = `<p class="text-[12px] text-on-surface-variant mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>`;
 
@@ -1461,7 +1310,6 @@ function togglePostLike(postKey){
               <span class="text-[10px] px-1.5 py-0.5 rounded bg-surface-c text-on-surface-variant font-bold border border-ol-variant/50">${item.subject}</span>               
               <span class="text-[10px] font-bold text-on-surface-variant opacity-60">${item.week}</span>             
             </div>           
-            
           </div>           
           <div class="flex flex-col items-center gap-1 shrink-0 ml-1">
             ${bookmarkBtn}
@@ -1476,7 +1324,8 @@ function togglePostLike(postKey){
       const commView = document.getElementById('mainCommunityContent');       
       const hSearch = document.getElementById('headerSearchWrapper'); 
       const mSearch = document.getElementById('mobileSearchWrapper');        
-      
+      const searchBar = document.getElementById('categorySearchBar');
+
       if (mode === 'community') {         
         dashView.classList.add('hidden'); commView.classList.remove('hidden');         
         if(hSearch) hSearch.classList.add('invisible'); if(mSearch) mSearch.classList.add('hidden');         
@@ -1489,22 +1338,40 @@ function togglePostLike(postKey){
       const board = document.getElementById('board'); 
       const boardTitle = document.getElementById('boardTitle');       
       board.innerHTML = ''; 
-      updateActiveMenu(mode);
-      document.querySelectorAll('.menu-item').forEach(el=>el.classList.remove('bg-secondary-container','text-primary'));        
-      updateFilterOptions();
-      const boardSection = document.getElementById('board').parentElement;
-      const filterBar = document.querySelector('#boardTitle').closest('section').querySelector('.flex.flex-wrap.items-center.gap-2');
+      updateActiveMenu(mode);        
 
-      if(mode === 'subject'){
-        boardSection.style.display = 'none';
-      } else {
-        boardSection.style.display = '';
-      }
-
-      if(filterBar){
-        filterBar.style.display = (mode === 'all') ? 'flex' : 'none';
-      }
+      let filtered = data;       
       
+      if (searchQuery) {
+        filtered = filtered.filter(item => 
+          (item.title && item.title.toLowerCase().includes(searchQuery)) || 
+          (item.subject && item.subject.toLowerCase().includes(searchQuery)) || 
+          (item.week && item.week.toLowerCase().includes(searchQuery)) ||
+          (item.desc && item.desc.toLowerCase().includes(searchQuery))
+        );        
+      }
+
+      // 전체 보기에서만 검색 바 표시 및 필터링 적용
+      if (mode === 'all') {
+        searchBar.classList.remove('hidden');
+        updateFilterSubjectOptions();
+
+        const sSubj = document.getElementById('filterSubject').value;
+        const sWeek = document.getElementById('filterWeek').value;
+        const sSort = document.getElementById('filterSort').value;
+
+        if (sSubj !== 'all') filtered = filtered.filter(item => item.subject === sSubj);
+        if (sWeek !== 'all') filtered = filtered.filter(item => item.week === sWeek);
+
+        if (sSort === 'newest') {
+          filtered.sort((a,b) => b.id - a.id);
+        } else {
+          filtered.sort((a,b) => a.id - b.id);
+        }
+      } else {
+        searchBar.classList.add('hidden');
+        // 다른 모드에서는 기본 정렬
+      }
 
       if (mode === 'etc') {
         boardTitle.innerText = "기타 참고 자료 보관함";
@@ -1531,44 +1398,14 @@ function togglePostLike(postKey){
         html += `</div>`;
         board.innerHTML = html;
 
-        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            // 버튼 클릭이 아닌 경우만 처리
             if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
           });
         });
         return;
-      }
-
-      let filtered = data;       
-      
-      if (searchQuery) {
-        filtered = filtered.filter(item => 
-          (item.title && item.title.toLowerCase().includes(searchQuery)) || 
-          (item.subject && item.subject.toLowerCase().includes(searchQuery)) || 
-          (item.week && item.week.toLowerCase().includes(searchQuery)) ||
-          (item.desc && item.desc.toLowerCase().includes(searchQuery)) ||
-          (item.tags && item.tags.toLowerCase().includes(searchQuery))
-        );        
-      }
-      
-      if (activeSubjectFilter) {
-        filtered = filtered.filter(item => item.subject === activeSubjectFilter);
-      }
-      if (activeWeekFilter) {
-        filtered = filtered.filter(item => item.week === activeWeekFilter);
-      }
-
-      // 정렬 적용
-      if (currentSortOrder === 'newest') {
-        filtered.sort((a, b) => (b.id || 0) - (a.id || 0));
-      } else if (currentSortOrder === 'oldest') {
-        filtered.sort((a, b) => (a.id || 0) - (b.id || 0));
-      } else {
-        filtered.sort(smartSort);
       }
 
       if (mode === 'bookmark') {
@@ -1580,10 +1417,8 @@ function togglePostLike(postKey){
         html += `</div>`;
         board.innerHTML = html;
 
-        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            // 버튼 클릭이 아닌 경우만 처리
             if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
@@ -1592,20 +1427,18 @@ function togglePostLike(postKey){
         return;
       }
 
-      if (mode === 'subject' || mode === 'week') {         
-        boardTitle.innerText = mode === 'week' ? "학사 주차별 타임라인 보드" : "내 과목별 타임라인 보드";                  
+      if (mode === 'subject') {         
+        boardTitle.innerText = "내 과목별 타임라인 보드";                  
         let gridWrapperHtml = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full items-start">`;         
-        const loopKeys = mode === 'week' ? ["1주차","2주차","3주차","4주차","5주차","6주차","7주차","8주차","9주차","10주차","11주차","12주차","13주차","14주차","15주차"] : subjects;          
         
-        loopKeys.forEach(key => {           
-          const itemsInKey = filtered.filter(x => x[mode] === key);           
-          if(mode === 'week' && itemsInKey.length === 0 && !searchQuery && !activeTagFilter) return;            
-          if(mode === 'subject' && itemsInKey.length === 0 && (searchQuery || activeTagFilter)) return;
+        subjects.forEach(key => {           
+          const itemsInKey = filtered.filter(x => x.subject === key);           
+          if(itemsInKey.length === 0 && searchQuery) return;
           
           let columnHtml = `             
             <div class="column flex flex-col w-full bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-sm">               
-              <h2 class="text-[15px] font-bold text-primary border-b border-ol-variant pb-2.5 mb-3 text-center">${mode === 'week' ? '📅 ' : '📚 '}${key}</h2>               
-              <div class="card-list flex flex-col gap-2 min-h-[50px] max-h-[400px] overflow-y-auto custom-scrollbar pr-1" data-filter-key="${key}" data-filter-mode="${mode}">`;                      
+              <h2 class="text-[15px] font-bold text-primary border-b border-ol-variant pb-2.5 mb-3 text-center">📚 ${key}</h2>               
+              <div class="card-list flex flex-col gap-2 min-h-[50px] max-h-[400px] overflow-y-auto custom-scrollbar pr-1" data-filter-key="${key}" data-filter-mode="subject">`;                      
           if(itemsInKey.length === 0) {             
             columnHtml += `<p class="text-[12px] text-on-surface-variant opacity-50 py-2 text-center">자료가 없습니다.</p>`;           
           } else {             
@@ -1617,19 +1450,8 @@ function togglePostLike(postKey){
         gridWrapperHtml += `</div>`;         
         board.innerHTML = gridWrapperHtml;
 
-        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            // 버튼 클릭이 아닌 경우만 처리
-            if(e.target.closest('button')) return;
-            const link = this.getAttribute('data-link');
-            if(link) launchTarget(link);
-          });
-        });
-        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
-        document.querySelectorAll('.kanban-card').forEach(card => {
-          card.addEventListener('click', function(e) {
-            // 버튼 클릭이 아닌 경우만 처리
             if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
@@ -1653,11 +1475,10 @@ function togglePostLike(postKey){
                 const itemId = Number(itemEl.getAttribute('data-id'));
                 const fromKey = evt.from.getAttribute('data-filter-key');
                 const toKey = evt.to.getAttribute('data-filter-key');
-                const filterMode = evt.to.getAttribute('data-filter-mode');
 
                 const itemIndex = data.findIndex(x => x.id === itemId);
                 if(itemIndex > -1 && fromKey !== toKey) {
-                  data[itemIndex][filterMode] = toKey;
+                  data[itemIndex].subject = toKey;
                 }
 
                 const allVisibleIds = [];
@@ -1686,12 +1507,14 @@ function togglePostLike(postKey){
         let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;         
         filtered.forEach(item => html += createCardHtml(item));         
         html += `</div>`;         
-        board.innerHTML = html;       
+        if (filtered.length === 0) {
+          board.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-8 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl w-full">조건에 맞는 자료가 없습니다.</p>`;
+        } else {
+          board.innerHTML = html;       
+        }
 
-        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            // 버튼 클릭이 아닌 경우만 처리
             if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
@@ -1711,6 +1534,10 @@ function togglePostLike(postKey){
       currentMode = subjectName; updateActiveMenu('');       
       const board = document.getElementById('board'); const boardTitle = document.getElementById('boardTitle');       
       board.innerHTML = ''; boardTitle.innerText = `과목 단독 보기: ${subjectName}`;       
+      
+      // 단독 보기에서도 검색바는 안 보이도록 처리
+      document.getElementById('categorySearchBar').classList.add('hidden');
+
       let html = `<div class="bg-surface-c-low border border-ol-variant rounded-xl p-5 shadow-sm max-w-3xl mx-auto w-full"><div class="card-list flex flex-col gap-2.5">`;       
       const filtered = data.filter(item => item.subject === subjectName && (!searchQuery || item.title.toLowerCase().includes(searchQuery)));       
       filtered.forEach(item => html += createCardHtml(item));       
@@ -1718,10 +1545,8 @@ function togglePostLike(postKey){
       html += `</div></div>`;       
       board.innerHTML = html;     
 
-        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            // 버튼 클릭이 아닌 경우만 처리
             if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
@@ -1733,12 +1558,12 @@ function togglePostLike(postKey){
       const items = document.querySelectorAll('.menu-item');       
       items.forEach(el => el.className = "menu-item flex items-center gap-4 px-4 py-[10px] rounded text-on-surface-variant hover:bg-secondary-container text-[14px]");       
       
+      // 인덱스 조정 완료 (주차별 보기 삭제됨)
       if(mode === 'subject') items[0].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');       
       if(mode === 'all') items[1].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');       
-      if(mode === 'week') items[2].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');       
-      if(mode === 'etc') items[3].classList.add('bg-primary-fixed', 'text-primary', 'font-bold'); 
-      if(mode === 'bookmark') items[4].classList.add('bg-primary-fixed', 'text-primary', 'font-bold'); 
-      if(mode === 'community') items[5].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');     
+      if(mode === 'etc') items[2].classList.add('bg-primary-fixed', 'text-primary', 'font-bold'); 
+      if(mode === 'bookmark') items[3].classList.add('bg-primary-fixed', 'text-primary', 'font-bold'); 
+      if(mode === 'community') items[4].classList.add('bg-primary-fixed', 'text-primary', 'font-bold');     
     }      
     
     function openSubjectModal() { document.getElementById('subjectModal').classList.remove('hidden'); }     
@@ -2016,38 +1841,10 @@ function togglePostLike(postKey){
 
     function saveNewItemToDB(newItem) {
       data.push(newItem);
-      data.sort(smartSort); // 추가 후 즉시 정렬
       saveCurrentStateToFirebase(); 
       render(currentMode); 
       closeItemModal();
     }
-
-    function toggleReplyLike(postKey, replyKey) {
-      if (!currentUser) { alert("로그인이 필요한 기능입니다."); return; }
-      const ref = database.ref('global_community/' + postKey + '/replies/' + replyKey + '/likes/' + currentUser.uid);
-      ref.once('value').then(snap => {
-        if (snap.exists()) ref.remove();
-        else ref.set(true);
-      });
-    }
-
-    function editReply(postKey, replyKey, oldText) {
-      const edited = prompt("댓글을 수정해 주세요:", oldText);
-      if (edited === null) return;
-      const finalEdited = edited.trim();
-      if (!finalEdited) { alert("공백은 등록 불가합니다."); return; }
-      database.ref('global_community/' + postKey + '/replies/' + replyKey).update({
-        text: finalEdited,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      }).catch(e => alert(e.message));
-    }
-
-
-    function setSubjectFilter(subjectName) {
-      currentSubjectFilter = currentSubjectFilter === subjectName ? null : subjectName;
-      render('subject');
-    }
-
   </script> 
 
 <script>
