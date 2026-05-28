@@ -4,7 +4,29 @@
   <meta charset="UTF-8">   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">   
   <title>MYCAMPUSLINKS — 통합 대시보드 & 광장</title>   
-  <script src="https://cdn.tailwindcss.com"></script>   
+  <script src="https://cdn.tailwindcss.com">
+function submitReply(postKey){
+  if(!currentUser){ alert('로그인이 필요합니다.'); return; }
+  const input = document.getElementById('reply-input-'+postKey);
+  if(!input || !input.value.trim()) return;
+  database.ref('global_community/' + postKey + '/replies').push({
+    uid: currentUser.uid,
+    nickname: currentUser.displayName || currentUser.email.split('@')[0] + ' 학우',
+    text: input.value.trim(),
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  }).then(()=> input.value='');
+}
+
+function togglePostLike(postKey){
+  if(!currentUser){ alert('로그인이 필요합니다.'); return; }
+  const ref = database.ref('global_community/' + postKey + '/likes/' + currentUser.uid);
+  ref.once('value').then(snap=>{
+    if(snap.exists()) ref.remove();
+    else ref.set(true);
+  });
+}
+
+</script>   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">    
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>   
@@ -228,9 +250,6 @@
       </a>       
       <a href="#" onclick="render('all')" class="menu-item flex items-center gap-4 px-4 py-[10px] rounded text-on-surface-variant hover:bg-secondary-container text-[14px]">         
         <i data-lucide="clipboard-list" class="w-5 h-5 text-primary"></i> 전체 보기       
-      </a>       
-      <a href="#" onclick="render('week')" class="menu-item flex items-center gap-4 px-4 py-[10px] rounded text-on-surface-variant hover:bg-secondary-container text-[14px]">         
-        <i data-lucide="calendar-days" class="w-5 h-5 text-primary"></i> 주차별 보기       
       </a>       
       <a href="#" onclick="render('etc')" class="menu-item flex items-center gap-4 px-4 py-[10px] rounded text-on-surface-variant hover:bg-secondary-container text-[14px]">         
         <i data-lucide="pin" class="w-5 h-5 text-primary"></i> 기타 참고 자료       
@@ -983,6 +1002,7 @@
     }      
     
     function submitCommunityPost() {       
+      if(!currentUser){ alert('로그인이 필요합니다.'); return; }
       const input = document.getElementById('communityPostInput');       
       if(!input || !input.value.trim()) return;       
       const content = input.value.trim();        
@@ -1469,8 +1489,22 @@
       const board = document.getElementById('board'); 
       const boardTitle = document.getElementById('boardTitle');       
       board.innerHTML = ''; 
-      updateActiveMenu(mode);        
-      updateFilterOptions(); 
+      updateActiveMenu(mode);
+      document.querySelectorAll('.menu-item').forEach(el=>el.classList.remove('bg-secondary-container','text-primary'));        
+      updateFilterOptions();
+      const boardSection = document.getElementById('board').parentElement;
+      const filterBar = document.querySelector('#boardTitle').closest('section').querySelector('.flex.flex-wrap.items-center.gap-2');
+
+      if(mode === 'subject'){
+        boardSection.style.display = 'none';
+      } else {
+        boardSection.style.display = '';
+      }
+
+      if(filterBar){
+        filterBar.style.display = (mode === 'all') ? 'flex' : 'none';
+      }
+      
 
       if (mode === 'etc') {
         boardTitle.innerText = "기타 참고 자료 보관함";
@@ -2021,117 +2055,6 @@ document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
 });
 </script>
-
-<script>
-/* ===== 사용자 요청 기능 패치 ===== */
-(function() {
-  function normalizeTitle(title) {
-    return String(title || '')
-      .replace(/\s+/g, '')
-      .replace(/[-_]/g, '')
-      .toLowerCase()
-      .trim();
-  }
-
-  function getSmartOrder(item) {
-    const title = (item.title || '').toLowerCase();
-
-    if (title.includes('ot') || title.includes('오리엔테이션')) return 0;
-    if (title.includes('마크다운')) return 1;
-
-    const chapterMatch = title.match(/(\d+)\s*장/);
-    if (chapterMatch) return 100 + parseInt(chapterMatch[1]);
-
-    const weekMatch = title.match(/(\d+)\s*주차/);
-    if (weekMatch) return 200 + parseInt(weekMatch[1]);
-
-    return 9999;
-  }
-
-  function smartSortData() {
-    if (!Array.isArray(data)) return;
-
-    data.sort((a, b) => {
-      const aOrder = getSmartOrder(a);
-      const bOrder = getSmartOrder(b);
-
-      if (aOrder !== bOrder) return aOrder - bOrder;
-
-      return (a.title || '').localeCompare((b.title || ''), 'ko');
-    });
-  }
-
-  // 주차별 보기 메뉴 제거
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.menu-item').forEach(el => {
-      if (el.textContent.includes('주차별 보기')) {
-        el.remove();
-      }
-    });
-  });
-
-  // render 패치
-  const originalRender = window.render;
-  if (typeof originalRender === 'function') {
-    window.render = function(mode) {
-      currentMode = mode;
-
-      if (currentSortOrder === 'smart') {
-        smartSortData();
-      }
-
-      originalRender(mode);
-
-      const filterBox = document.querySelector('#sortOrderSelect')?.closest('.flex.items-center.gap-2.bg-surface-c-low');
-      if (filterBox) {
-        filterBox.style.display = mode === 'all' ? 'flex' : 'none';
-      }
-    };
-  }
-
-  // addItem 중복 방지
-  const originalAddItem = window.addItem;
-  if (typeof originalAddItem === 'function') {
-    window.addItem = function() {
-      const titleInput = document.getElementById('newItemTitle');
-      const normalized = normalizeTitle(titleInput?.value);
-
-      const exists = data.some(item =>
-        normalizeTitle(item.title) === normalized
-      );
-
-      if (exists) {
-        alert('동일한 제목의 자료가 이미 존재합니다.');
-        return;
-      }
-
-      originalAddItem();
-    };
-  }
-
-  // 기본 자료 복구 중복 방지
-  const originalRestore = window.restoreDefaultData;
-  if (typeof originalRestore === 'function') {
-    window.restoreDefaultData = function() {
-      const existingMap = new Set(
-        data.map(item => normalizeTitle(item.title))
-      );
-
-      defaultData.forEach(item => {
-        if (!existingMap.has(normalizeTitle(item.title))) {
-          data.push({...item});
-        }
-      });
-
-      saveCurrentStateToFirebase();
-      render(currentMode);
-
-      alert('중복 없이 기본 자료가 복구되었습니다.');
-    };
-  }
-})();
-</script>
-
 </body>
  
 </html>
