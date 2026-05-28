@@ -339,14 +339,31 @@
             <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드 (꾹 눌러서 이동)</p>           
           </div>           
           
-          <div class="flex items-center gap-2">             
-            <select id="tagFilterSelect" onchange="handleTagFilter()" class="px-3 py-1.5 text-[13px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary max-w-[150px] sm:max-w-[200px] truncate">
-              <option value="">모든 태그 (전체)</option>
-            </select>
-            <button onclick="restoreDefaultData()" class="px-3 py-1.5 text-[12px] font-bold rounded-lg border border-primary text-primary bg-primary-fixed hover:bg-primary hover:text-white transition-all shadow-sm shrink-0">               
+          <div class="flex flex-wrap items-center gap-2">             
+            <div class="flex items-center gap-2 bg-surface-c-low border border-ol-variant p-1 rounded-xl shadow-sm">
+              <select id="subjectFilterSelect" onchange="handleDetailedFilter()" class="px-2 py-1.5 text-[12px] font-bold rounded-lg border-none bg-transparent text-on-surface focus:outline-none min-w-[100px]">
+                <option value="">모든 과목 ⬇️</option>
+              </select>
+              <div class="w-[1px] h-4 bg-ol-variant"></div>
+              <select id="weekFilterSelect" onchange="handleDetailedFilter()" class="px-2 py-1.5 text-[12px] font-bold rounded-lg border-none bg-transparent text-on-surface focus:outline-none min-w-[80px]">
+                <option value="">모든 주차 ⬇️</option>
+                <option value="상시">상시</option>
+                <option value="1주차">1주차</option><option value="2주차">2주차</option><option value="3주차">3주차</option><option value="4주차">4주차</option>
+                <option value="5주차">5주차</option><option value="6주차">6주차</option><option value="7주차">7주차</option><option value="8주차">8주차</option>
+                <option value="9주차">9주차</option><option value="10주차">10주차</option><option value="11주차">11주차</option><option value="12주차">12주차</option>
+                <option value="13주차">13주차</option><option value="14주차">14주차</option><option value="15주차">15주차</option>
+              </select>
+              <div class="w-[1px] h-4 bg-ol-variant"></div>
+              <select id="sortOrderSelect" onchange="handleDetailedFilter()" class="px-2 py-1.5 text-[12px] font-bold rounded-lg border-none bg-transparent text-on-surface focus:outline-none min-w-[90px]">
+                <option value="smart">스마트 정렬</option>
+                <option value="newest">최신순</option>
+                <option value="oldest">오래된순</option>
+              </select>
+            </div>
+            <button onclick="restoreDefaultData()" class="px-3 py-2 text-[12px] font-bold rounded-xl border border-primary text-primary bg-primary-fixed hover:bg-primary hover:text-white transition-all shadow-sm shrink-0">               
               🔄 기본 자료 복구             
             </button>           
-          </div>         
+          </div>
         </div>         
         
         <div id="board" class="w-full flex-1 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar pb-10"></div>       
@@ -612,7 +629,9 @@
     let calDate = new Date(); 
     let selectedDateStr = '';
     let activeReviewFilter = null;      
-    let activeTagFilter = '';
+    let activeSubjectFilter = '';
+    let activeWeekFilter = '';
+    let currentSortOrder = 'smart';
     
     const defaultSubjects = ["게임프로그래밍","게임그래픽 기초","객체 지향 프로그래밍", "프론트엔드프로그래밍"];
     const defaultData = [
@@ -1150,16 +1169,23 @@
     
     // 스마트 정렬 함수 (OT -> 1장 -> 2장 ... 또는 1주차 -> 2주차 순서 보장)
     function smartSort(a, b) {
-      // 주차 정렬 우선
-      const weekA = parseInt(a.week) || (a.week === '상시' ? 0 : 999);
-      const weekB = parseInt(b.week) || (b.week === '상시' ? 0 : 999);
+      // 주차 정렬 우선 (숫자만 추출하여 비교)
+      const getWeekNum = (w) => {
+        if (w === '상시') return 0;
+        const m = (w || '').match(/\d+/);
+        return m ? parseInt(m[0]) : 999;
+      };
+      const weekA = getWeekNum(a.week);
+      const weekB = getWeekNum(b.week);
       
       if (weekA !== weekB) return weekA - weekB;
 
       // 제목 내 숫자 추출 (예: "1장", "2장", "3주차")
       const getNumber = (str) => {
         if (!str) return 999;
-        if (str.toLowerCase().includes('ot')) return -1; // OT는 맨 앞으로
+        const lower = str.toLowerCase();
+        if (lower.includes('ot')) return -1; // OT는 맨 앞으로
+        if (lower.includes('마크다운')) return 0; // 마크다운은 OT 다음으로
         const match = str.match(/\d+/);
         return match ? parseInt(match[0]) : 999;
       };
@@ -1180,23 +1206,26 @@
           if(!subjects.includes(s)) subjects.push(s); 
         });         
         
-        // 2. 수업 자료 복구 (ID 또는 제목 기반 중복 체크)
+        // 2. 수업 자료 복구 (제목 기반 중복 체크 강화)
         defaultData.forEach(d => { 
-          // 기존 데이터에서 동일 ID 또는 동일 제목 검색
-          const existingIndex = data.findIndex(x => x.id === d.id || (x.title && d.title && x.title.trim() === d.title.trim()));
+          // 제목에서 공백 제거 후 비교하여 중복 체크
+          const cleanTitle = (t) => (t || '').replace(/\s+/g, '');
+          const dTitle = cleanTitle(d.title);
           
-          if(existingIndex === -1) {
+          const existingItem = data.find(x => cleanTitle(x.title) === dTitle);
+          
+          if(!existingItem) {
             // 아예 없는 경우 새로 추가
             data.push(JSON.parse(JSON.stringify(d)));
           } else {
             // 이미 있는 경우: 북마크 상태는 유지하면서 나머지 정보만 업데이트
-            const currentBookmark = data[existingIndex].bookmark;
-            data[existingIndex] = JSON.parse(JSON.stringify(d));
-            data[existingIndex].bookmark = currentBookmark;
+            const currentBookmark = existingItem.bookmark;
+            Object.assign(existingItem, JSON.parse(JSON.stringify(d)));
+            existingItem.bookmark = currentBookmark;
           }
         });         
         
-        // 스마트 정렬 적용
+        // 정렬 상태 강제 적용
         data.sort(smartSort);
 
         // 3. D-Day 복구
@@ -1218,7 +1247,7 @@
         renderApps();
         renderDDayList();
         render(currentMode); 
-        alert('복구가 완료되었습니다. (기존 북마크 유지 및 스마트 정렬 적용)');       
+        alert('복구가 완료되었습니다. 북마크가 유지되고 순서가 정렬되었습니다.');       
       }     
     }
     
@@ -1284,30 +1313,22 @@
       if(currentMode !== 'community' && currentMode !== 'etc' && currentMode !== 'bookmark') render(currentMode);     
     }      
     
-    function handleTagFilter() {
-      activeTagFilter = document.getElementById('tagFilterSelect').value;
+    function handleDetailedFilter() {
+      activeSubjectFilter = document.getElementById('subjectFilterSelect').value;
+      activeWeekFilter = document.getElementById('weekFilterSelect').value;
+      currentSortOrder = document.getElementById('sortOrderSelect').value;
       render(currentMode);
     }
 
-    function updateTagFilterOptions() {
-      const select = document.getElementById('tagFilterSelect');
-      if (!select) return;
-      
-      const allTags = new Set();
-      data.forEach(item => {
-        if (item.tags) {
-          item.tags.split(',').forEach(tag => {
-            const t = tag.trim();
-            if (t) allTags.add(t);
-          });
-        }
-      });
-
-      select.innerHTML = '<option value="">모든 태그 (전체)</option>';
-      [...allTags].sort().forEach(tag => {
-        const isSelected = tag === activeTagFilter ? 'selected' : '';
-        select.innerHTML += `<option value="${tag}" ${isSelected}># ${tag}</option>`;
-      });
+    function updateFilterOptions() {
+      const subSelect = document.getElementById('subjectFilterSelect');
+      if (subSelect) {
+        const current = subSelect.value;
+        subSelect.innerHTML = '<option value="">모든 과목 ⬇️</option>';
+        subjects.forEach(sub => {
+          subSelect.innerHTML += `<option value="${sub}" ${sub === current ? 'selected' : ''}>${sub}</option>`;
+        });
+      }
     }
 
     // ✅ 북마크 토글 로직 (부분 업데이트 방식 - 전체 렌더링 없음)
@@ -1449,7 +1470,7 @@
       const boardTitle = document.getElementById('boardTitle');       
       board.innerHTML = ''; 
       updateActiveMenu(mode);        
-      updateTagFilterOptions(); 
+      updateFilterOptions(); 
 
       if (mode === 'etc') {
         boardTitle.innerText = "기타 참고 자료 보관함";
@@ -1500,12 +1521,21 @@
         );        
       }
       
-      if (activeTagFilter) {
-        filtered = filtered.filter(item => item.tags && item.tags.split(',').map(t => t.trim()).includes(activeTagFilter));
+      if (activeSubjectFilter) {
+        filtered = filtered.filter(item => item.subject === activeSubjectFilter);
+      }
+      if (activeWeekFilter) {
+        filtered = filtered.filter(item => item.week === activeWeekFilter);
       }
 
-      // 렌더링 전 스마트 정렬 적용
-      filtered.sort(smartSort);
+      // 정렬 적용
+      if (currentSortOrder === 'newest') {
+        filtered.sort((a, b) => (b.id || 0) - (a.id || 0));
+      } else if (currentSortOrder === 'oldest') {
+        filtered.sort((a, b) => (a.id || 0) - (b.id || 0));
+      } else {
+        filtered.sort(smartSort);
+      }
 
       if (mode === 'bookmark') {
         boardTitle.innerText = "⭐️ 즐겨찾기 보관함";
