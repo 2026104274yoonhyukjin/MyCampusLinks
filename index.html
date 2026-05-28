@@ -1228,56 +1228,68 @@
       });
     }
 
-    // ✅ 스크롤 위치 보존 및 북마크 토글 로직
+    // ✅ 스크롤 위치 보존 및 북마크 토글 로직 (개선된 버전)
     function toggleBookmark(id, event) {
       if(event) event.stopPropagation();
       const item = data.find(x => x.id === id);
-      if(item) {
-        // 현재 브라우저의 전체 세로 스크롤 값 저장
-        const windowScroll = window.scrollY;
-        
-        // 보드 영역 내부 스크롤이 있다면 해당 값도 저장
-        const mainBoard = document.getElementById('board');
-        const boardScroll = mainBoard ? mainBoard.scrollTop : 0;
-        
-        // 과목별/주차별 내부 리스트 스크롤이 있다면 전부 저장
-        const cardLists = document.querySelectorAll('.card-list');
-        const listScrolls = Array.from(cardLists).map(list => list.scrollTop);
+      if(!item) return;
+      
+      // 현재 스크롤 상태 저장 (data-filter-key 기반으로 추적)
+      const windowScroll = window.scrollY;
+      const mainBoard = document.getElementById('board');
+      const boardScroll = mainBoard ? mainBoard.scrollTop : 0;
+      
+      // 각 카드 리스트의 스크롤을 data-filter-key 기반으로 저장
+      const scrollMap = {};
+      document.querySelectorAll('.card-list').forEach(list => {
+        const key = list.getAttribute('data-filter-key');
+        if(key) scrollMap[key] = list.scrollTop;
+      });
 
-        item.bookmark = !item.bookmark;
-        saveCurrentStateToFirebase();
-        
-        if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
-          render(currentMode); 
-        } else {
-          renderSubjectDetail(currentMode);
-        }
+      // 북마크 토글
+      item.bookmark = !item.bookmark;
+      saveCurrentStateToFirebase();
+      
+      if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
+        render(currentMode); 
+      } else {
+        renderSubjectDetail(currentMode);
+      }
 
-        // 화면 리렌더링 후, 미세한 시간차를 두고 스크롤 위치 복구
-        setTimeout(() => {
+      // requestAnimationFrame을 사용하여 렌더링 완료 후 스크롤 복구
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // 윈도우 스크롤 복구
           window.scrollTo(0, windowScroll);
           
+          // 보드 스크롤 복구
           const newBoard = document.getElementById('board');
           if (newBoard) newBoard.scrollTop = boardScroll;
           
-          const newCardLists = document.querySelectorAll('.card-list');
-          newCardLists.forEach((list, index) => {
-            if (listScrolls[index] !== undefined) {
-              list.scrollTop = listScrolls[index];
+          // 각 카드 리스트 스크롤을 data-filter-key 기반으로 복구
+          document.querySelectorAll('.card-list').forEach(list => {
+            const key = list.getAttribute('data-filter-key');
+            if(key && scrollMap[key] !== undefined) {
+              list.scrollTop = scrollMap[key];
             }
           });
-        }, 0);
-      }
+        });
+      });
     }
 
     function removeMaterial(id, event) {       
       if(event) event.stopPropagation();       
       if(confirm('이 자료집 항목을 삭제할까요?')) { 
+        // 현재 스크롤 상태 저장 (data-filter-key 기반)
         const windowScroll = window.scrollY;
         const mainBoard = document.getElementById('board');
         const boardScroll = mainBoard ? mainBoard.scrollTop : 0;
-        const cardLists = document.querySelectorAll('.card-list');
-        const listScrolls = Array.from(cardLists).map(list => list.scrollTop);
+        
+        const scrollMap = {};
+        document.querySelectorAll('.card-list').forEach(list => {
+          const key = list.getAttribute('data-filter-key');
+          if(key) scrollMap[key] = list.scrollTop;
+        });
 
         data = data.filter(x => x.id !== id); 
         saveCurrentStateToFirebase(); 
@@ -1288,15 +1300,18 @@
           renderSubjectDetail(currentMode);
         }
 
-        setTimeout(() => {
-          window.scrollTo(0, windowScroll);
-          const newBoard = document.getElementById('board');
-          if (newBoard) newBoard.scrollTop = boardScroll;
-          const newCardLists = document.querySelectorAll('.card-list');
-          newCardLists.forEach((list, index) => {
-            if (listScrolls[index] !== undefined) list.scrollTop = listScrolls[index];
+        // requestAnimationFrame을 사용하여 렌더링 완료 후 스크롤 복구
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo(0, windowScroll);
+            const newBoard = document.getElementById('board');
+            if (newBoard) newBoard.scrollTop = boardScroll;
+            document.querySelectorAll('.card-list').forEach(list => {
+              const key = list.getAttribute('data-filter-key');
+              if(key && scrollMap[key] !== undefined) list.scrollTop = scrollMap[key];
+            });
           });
-        }, 0);
+        });
       }     
     }
 
