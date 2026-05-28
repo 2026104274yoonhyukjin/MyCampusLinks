@@ -1148,6 +1148,31 @@
       }
     }      
     
+    // 스마트 정렬 함수 (OT -> 1장 -> 2장 ... 또는 1주차 -> 2주차 순서 보장)
+    function smartSort(a, b) {
+      // 주차 정렬 우선
+      const weekA = parseInt(a.week) || (a.week === '상시' ? 0 : 999);
+      const weekB = parseInt(b.week) || (b.week === '상시' ? 0 : 999);
+      
+      if (weekA !== weekB) return weekA - weekB;
+
+      // 제목 내 숫자 추출 (예: "1장", "2장", "3주차")
+      const getNumber = (str) => {
+        if (!str) return 999;
+        if (str.toLowerCase().includes('ot')) return -1; // OT는 맨 앞으로
+        const match = str.match(/\d+/);
+        return match ? parseInt(match[0]) : 999;
+      };
+
+      const numA = getNumber(a.title);
+      const numB = getNumber(b.title);
+
+      if (numA !== numB) return numA - numB;
+      
+      // 숫자가 같거나 없는 경우 사전순
+      return (a.title || '').localeCompare(b.title || '');
+    }
+
     function restoreDefaultData() {       
       if(confirm('기본 탑재 고정형 수업자료를 복구하여 추가하시겠습니까? (내 자료 유지)')) {         
         // 1. 과목 복구 (중복 제외)
@@ -1155,16 +1180,24 @@
           if(!subjects.includes(s)) subjects.push(s); 
         });         
         
-        // 2. 수업 자료 복구 (ID 기반 중복 체크)
+        // 2. 수업 자료 복구 (ID 또는 제목 기반 중복 체크)
         defaultData.forEach(d => { 
-          const isDuplicate = data.some(x => x.id === d.id || x.title === d.title);
-          if(!isDuplicate) {
+          // 기존 데이터에서 동일 ID 또는 동일 제목 검색
+          const existingIndex = data.findIndex(x => x.id === d.id || (x.title && d.title && x.title.trim() === d.title.trim()));
+          
+          if(existingIndex === -1) {
+            // 아예 없는 경우 새로 추가
             data.push(JSON.parse(JSON.stringify(d)));
-          } 
+          } else {
+            // 이미 있는 경우: 북마크 상태는 유지하면서 나머지 정보만 업데이트
+            const currentBookmark = data[existingIndex].bookmark;
+            data[existingIndex] = JSON.parse(JSON.stringify(d));
+            data[existingIndex].bookmark = currentBookmark;
+          }
         });         
         
-        // ID 순서대로 정렬하여 순서 유지
-        data.sort((a, b) => (a.id || 0) - (b.id || 0));
+        // 스마트 정렬 적용
+        data.sort(smartSort);
 
         // 3. D-Day 복구
         defaultDDayList.forEach(d => { 
@@ -1185,7 +1218,7 @@
         renderApps();
         renderDDayList();
         render(currentMode); 
-        alert('복구가 완료되었습니다. (중복 항목은 제외되었습니다)');       
+        alert('복구가 완료되었습니다. (기존 북마크 유지 및 스마트 정렬 적용)');       
       }     
     }
     
@@ -1470,6 +1503,9 @@
       if (activeTagFilter) {
         filtered = filtered.filter(item => item.tags && item.tags.split(',').map(t => t.trim()).includes(activeTagFilter));
       }
+
+      // 렌더링 전 스마트 정렬 적용
+      filtered.sort(smartSort);
 
       if (mode === 'bookmark') {
         boardTitle.innerText = "⭐️ 즐겨찾기 보관함";
@@ -1916,6 +1952,7 @@
 
     function saveNewItemToDB(newItem) {
       data.push(newItem);
+      data.sort(smartSort); // 추가 후 즉시 정렬
       saveCurrentStateToFirebase(); 
       render(currentMode); 
       closeItemModal();
