@@ -68,6 +68,12 @@
       }).catch(e => alert(e.message));
     }
 
+
+    function setSubjectFilter(subjectName) {
+      currentSubjectFilter = currentSubjectFilter === subjectName ? null : subjectName;
+      render('subject');
+    }
+
   </script>   
   
   <style>     
@@ -601,6 +607,7 @@
     let personalEvents = [];
     let apps = [];      
     let currentMode = 'subject'; 
+    let currentSubjectFilter = null;
     let searchQuery = ''; 
     let calDate = new Date(); 
     let selectedDateStr = '';
@@ -1318,8 +1325,7 @@
             });
           });
         });
-      }     
-    }
+    
 
     // ✅ 원본 가로형 레이아웃 복구 + 아이콘 겹침 방지(z-10) 추가
     function createCardHtml(item) {       
@@ -1913,6 +1919,12 @@
         text: finalEdited,
         timestamp: firebase.database.ServerValue.TIMESTAMP
       }).catch(e => alert(e.message));
+    }
+
+
+    function setSubjectFilter(subjectName) {
+      currentSubjectFilter = currentSubjectFilter === subjectName ? null : subjectName;
+      render('subject');
     }
 
   </script> 
