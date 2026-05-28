@@ -2021,6 +2021,117 @@ document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
 });
 </script>
+
+<script>
+/* ===== 사용자 요청 기능 패치 ===== */
+(function() {
+  function normalizeTitle(title) {
+    return String(title || '')
+      .replace(/\s+/g, '')
+      .replace(/[-_]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  function getSmartOrder(item) {
+    const title = (item.title || '').toLowerCase();
+
+    if (title.includes('ot') || title.includes('오리엔테이션')) return 0;
+    if (title.includes('마크다운')) return 1;
+
+    const chapterMatch = title.match(/(\d+)\s*장/);
+    if (chapterMatch) return 100 + parseInt(chapterMatch[1]);
+
+    const weekMatch = title.match(/(\d+)\s*주차/);
+    if (weekMatch) return 200 + parseInt(weekMatch[1]);
+
+    return 9999;
+  }
+
+  function smartSortData() {
+    if (!Array.isArray(data)) return;
+
+    data.sort((a, b) => {
+      const aOrder = getSmartOrder(a);
+      const bOrder = getSmartOrder(b);
+
+      if (aOrder !== bOrder) return aOrder - bOrder;
+
+      return (a.title || '').localeCompare((b.title || ''), 'ko');
+    });
+  }
+
+  // 주차별 보기 메뉴 제거
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.menu-item').forEach(el => {
+      if (el.textContent.includes('주차별 보기')) {
+        el.remove();
+      }
+    });
+  });
+
+  // render 패치
+  const originalRender = window.render;
+  if (typeof originalRender === 'function') {
+    window.render = function(mode) {
+      currentMode = mode;
+
+      if (currentSortOrder === 'smart') {
+        smartSortData();
+      }
+
+      originalRender(mode);
+
+      const filterBox = document.querySelector('#sortOrderSelect')?.closest('.flex.items-center.gap-2.bg-surface-c-low');
+      if (filterBox) {
+        filterBox.style.display = mode === 'all' ? 'flex' : 'none';
+      }
+    };
+  }
+
+  // addItem 중복 방지
+  const originalAddItem = window.addItem;
+  if (typeof originalAddItem === 'function') {
+    window.addItem = function() {
+      const titleInput = document.getElementById('newItemTitle');
+      const normalized = normalizeTitle(titleInput?.value);
+
+      const exists = data.some(item =>
+        normalizeTitle(item.title) === normalized
+      );
+
+      if (exists) {
+        alert('동일한 제목의 자료가 이미 존재합니다.');
+        return;
+      }
+
+      originalAddItem();
+    };
+  }
+
+  // 기본 자료 복구 중복 방지
+  const originalRestore = window.restoreDefaultData;
+  if (typeof originalRestore === 'function') {
+    window.restoreDefaultData = function() {
+      const existingMap = new Set(
+        data.map(item => normalizeTitle(item.title))
+      );
+
+      defaultData.forEach(item => {
+        if (!existingMap.has(normalizeTitle(item.title))) {
+          data.push({...item});
+        }
+      });
+
+      saveCurrentStateToFirebase();
+      render(currentMode);
+
+      alert('중복 없이 기본 자료가 복구되었습니다.');
+    };
+  }
+})();
+</script>
+
 </body>
  
 </html>
