@@ -133,6 +133,11 @@
       letter-spacing: -0.04em;
     }
 
+    /* 커스텀 스크롤바 */
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ol-variant); border-radius: 8px; border: 2px solid var(--surface); }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary); }
   </style> 
 
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -300,19 +305,24 @@
         </div>       
       </section>        
       
-      <section class="flex-1 flex flex-col">         
+      <section class="flex-1 flex flex-col min-h-0">         
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">           
           <div>            
             <h3 id="boardTitle" class="text-[18px] md:text-[20px] font-semibold text-on-surface">저장 자료</h3>             
             <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드 (꾹 눌러서 이동)</p>           
           </div>           
-          <div>             
-            <button onclick="restoreDefaultData()" class="px-3 py-1.5 text-[12px] font-bold rounded-lg border border-primary text-primary bg-primary-fixed hover:bg-primary hover:text-white transition-all shadow-sm">               
-              🔄 기본 자료 복구 (내 데이터 유지)             
+          
+          <div class="flex items-center gap-2">             
+            <select id="tagFilterSelect" onchange="handleTagFilter()" class="px-3 py-1.5 text-[13px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary max-w-[150px] sm:max-w-[200px] truncate">
+              <option value="">모든 태그 (전체)</option>
+            </select>
+            <button onclick="restoreDefaultData()" class="px-3 py-1.5 text-[12px] font-bold rounded-lg border border-primary text-primary bg-primary-fixed hover:bg-primary hover:text-white transition-all shadow-sm shrink-0">               
+              🔄 기본 자료 복구             
             </button>           
           </div>         
         </div>         
-        <div id="board" class="w-full"></div>       
+        
+        <div id="board" class="w-full flex-1 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar pb-10"></div>       
       </section>     
     </div>      
     
@@ -569,6 +579,12 @@
     let ddayList = [];     
     let personalEvents = [];
     let apps = [];      
+    let currentMode = 'subject'; 
+    let searchQuery = ''; 
+    let calDate = new Date(); 
+    let selectedDateStr = '';
+    let activeReviewFilter = null;      
+    let activeTagFilter = '';
     
     const defaultSubjects = ["게임프로그래밍","게임그래픽 기초","객체 지향 프로그래밍", "프론트엔드프로그래밍"];
     const defaultData = [
@@ -601,8 +617,6 @@
       { id: 25, title: "3장 연산자", week: "3주차", subject: "객체 지향 프로그래밍", link: "pdf/3장_연산자.pdf", type: "file" },
       { id: 26, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체 지향 프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf", type: "file" },
       { id: 27, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf", type: "file" },
-      { id: 28, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file" },
-      { id: 29, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file" },
       { id: 28, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file" },
       { id: 29, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file" },
       { id: 30, title: "8장-클래스의 외부 구성요소", week: "8주차", subject: "객체 지향 프로그래밍", link: "pdf/8장_클래스의_외부_구성요소_(package_import_외부클래스).pdf", type: "file" },
@@ -757,8 +771,7 @@
       }
     }
 
-        // ── Community: per-post child listeners map ──────────────────────────────
-    const _postListeners = {}; // postKey → { likes, replies } off-handles
+    const _postListeners = {}; 
 
     function _relTime(ts) {
       if (!ts) return '';
@@ -906,7 +919,6 @@
 
           _postListeners[key] = {};
 
-          // Real-time likes listener
           const likesRef = database.ref('global_community/' + key + '/likes');
           function makeLikesHandler(k) {
             const handler = likesRef.on('value', function(snap) {
@@ -927,7 +939,6 @@
           const likesHandler = makeLikesHandler(key);
           _postListeners[key].likesOff = function() { likesRef.off('value', likesHandler); };
 
-          // Real-time replies listener
           const repliesRef = database.ref('global_community/' + key + '/replies');
           function makeRepliesHandler(k) {
             const handler = repliesRef.on('value', function(snap) {
@@ -940,6 +951,7 @@
         });
       });   
     }
+    
     function switchCommunityTab(tab) {       
       const bSec = document.getElementById('communityBoardSection'); const rSec = document.getElementById('communityReviewSection');       
       const bBtn = document.getElementById('tabBtnBoard'); const rBtn = document.getElementById('tabBtnReview');       
@@ -1064,9 +1076,6 @@
       });
     }      
     
-    let currentMode = 'subject'; let searchQuery = ''; let calDate = new Date(); let selectedDateStr = '';
-    let activeReviewFilter = null;      
-    
     function saveCurrentStateToFirebase() {       
       if (!currentUser) return;       
       database.ref('users/' + currentUser.uid).set({ subjects: subjects, data: data, ddayList: ddayList, personalEvents: personalEvents, apps: apps });     
@@ -1111,7 +1120,6 @@
     
     function logout() { if(confirm('안전하게 로그아웃할까요?')) auth.signOut(); }      
     
-    // 🔥 PDF 렌더링 복구 및 로컬 경로(.exe) 입력 시 보안 안내문구 추가
     function launchTarget(target) {       
       if (!target) return;       
       const cleanTarget = target.trim();       
@@ -1233,6 +1241,32 @@
       if(currentMode !== 'community' && currentMode !== 'etc' && currentMode !== 'bookmark') render(currentMode);     
     }      
     
+    function handleTagFilter() {
+      activeTagFilter = document.getElementById('tagFilterSelect').value;
+      render(currentMode);
+    }
+
+    function updateTagFilterOptions() {
+      const select = document.getElementById('tagFilterSelect');
+      if (!select) return;
+      
+      const allTags = new Set();
+      data.forEach(item => {
+        if (item.tags) {
+          item.tags.split(',').forEach(tag => {
+            const t = tag.trim();
+            if (t) allTags.add(t);
+          });
+        }
+      });
+
+      select.innerHTML = '<option value="">모든 태그 (전체)</option>';
+      [...allTags].sort().forEach(tag => {
+        const isSelected = tag === activeTagFilter ? 'selected' : '';
+        select.innerHTML += `<option value="${tag}" ${isSelected}># ${tag}</option>`;
+      });
+    }
+
     function toggleBookmark(id, event) {
       if(event) event.stopPropagation(); 
       const item = data.find(x => x.id === id);
@@ -1263,6 +1297,7 @@
       const boardTitle = document.getElementById('boardTitle');       
       board.innerHTML = ''; 
       updateActiveMenu(mode);        
+      updateTagFilterOptions(); 
 
       if (mode === 'etc') {
         boardTitle.innerText = "기타 참고 자료 보관함";
@@ -1291,20 +1326,35 @@
         return;
       }
 
+      let filtered = data;       
+      
+      // 검색어 기반 필터링 (제목, 과목, 주차, 설명, 태그)
+      if (searchQuery) {
+        filtered = filtered.filter(item => 
+          (item.title && item.title.toLowerCase().includes(searchQuery)) || 
+          (item.subject && item.subject.toLowerCase().includes(searchQuery)) || 
+          (item.week && item.week.toLowerCase().includes(searchQuery)) ||
+          (item.desc && item.desc.toLowerCase().includes(searchQuery)) ||
+          (item.tags && item.tags.toLowerCase().includes(searchQuery))
+        );        
+      }
+      
+      // 카테고리 태그 기반 상세 필터링
+      if (activeTagFilter) {
+        filtered = filtered.filter(item => item.tags && item.tags.split(',').map(t => t.trim()).includes(activeTagFilter));
+      }
+
       if (mode === 'bookmark') {
         boardTitle.innerText = "⭐️ 즐겨찾기 보관함";
         let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
-        const filtered = data.filter(item => item.bookmark); 
-        filtered.forEach(item => html += createCardHtml(item));
-        if(filtered.length === 0) html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full">즐겨찾기한 자료가 없습니다. ⭐️ 버튼을 눌러 추가해보세요.</p>`;
+        const bookmarkedOnly = filtered.filter(item => item.bookmark); 
+        bookmarkedOnly.forEach(item => html += createCardHtml(item));
+        if(bookmarkedOnly.length === 0) html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full">표시할 즐겨찾기 자료가 없습니다.</p>`;
         html += `</div>`;
         board.innerHTML = html;
         return;
       }
 
-      let filtered = data;       
-      if (searchQuery) filtered = data.filter(item => item.title.toLowerCase().includes(searchQuery) || item.subject.toLowerCase().includes(searchQuery) || item.week.toLowerCase().includes(searchQuery));        
-      
       if (mode === 'subject' || mode === 'week') {         
         boardTitle.innerText = mode === 'week' ? "학사 주차별 타임라인 보드" : "내 과목별 타임라인 보드";                  
         let gridWrapperHtml = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full items-start">`;         
@@ -1312,7 +1362,8 @@
         
         loopKeys.forEach(key => {           
           const itemsInKey = filtered.filter(x => x[mode] === key);           
-          if(mode === 'week' && itemsInKey.length === 0 && !searchQuery) return;            
+          if(mode === 'week' && itemsInKey.length === 0 && !searchQuery && !activeTagFilter) return;            
+          if(mode === 'subject' && itemsInKey.length === 0 && (searchQuery || activeTagFilter)) return;
           
           let columnHtml = `             
             <div class="column flex flex-col w-full bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-sm">               
