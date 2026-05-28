@@ -1275,20 +1275,23 @@
     }
 
     // ✅ 버그 1번 수정: 렌더링 분기 처리
-    function toggleBookmark(id, event) {
-      if(event) event.stopPropagation(); 
-      const item = data.find(x => x.id === id);
-      if(item) {
-        item.bookmark = !item.bookmark; 
-        saveCurrentStateToFirebase();
-        if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
-          render(currentMode); 
-        } else {
-          renderSubjectDetail(currentMode);
-        }
-      }
-    }
+  function toggleBookmark(id, event) {
+  if(event) event.stopPropagation();
+  const item = data.find(x => x.id === id);
+  if(item) {
+    // 1. 현재 사용자의 스크롤 위치 저장
+    const currentScrollY = window.scrollY;
 
+    item.bookmark = !item.bookmark;
+    saveCurrentStateToFirebase();
+    
+    // 2. 화면 재렌더링
+    render(currentMode);
+
+    // 3. 렌더링이 끝난 직후 저장해둔 스크롤 위치로 이동
+    window.scrollTo(0, currentScrollY);
+  }
+}
     // ✅ 버그 1번 수정: 삭제 시 렌더링 분기 처리
     function removeMaterial(id, event) {       
       if(event) event.stopPropagation();       
