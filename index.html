@@ -633,7 +633,6 @@
       { id: 40, title: "11주차 수업 자료-개발 착수 & MVP 기반 태스크 관리", week: "11주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week11", type: "web", tags: "MVP, 프로젝트" },
       { id: 41, title: "12주차 수업 자료-MVP 통합 및 알파 버전 완성", week: "12주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week12", type: "web", tags: "MVP, 프로젝트" },
       { id: 42, title: "13주차 수업 자료-알파 테스트 피드백 보드", week: "13주차", subject: "프론트엔드프로그래밍", link: "https://www.figma.com/board/XTQk7MT9MuRqokMwAeNRS2/%ED%94%BC%EB%93%9C%EB%B0%B1%EB%B3%B4%EB%93%9C-103-?node-id=0-1&p=f&t=4exAxS5NEkhzxOV3-02", type: "web", tags: "Figma, 피드백" }
-      
     ];
 
     const defaultDDayList = [{ id: 1001, title: "기말고사 및 종강", date: "2026-06-15" }];
@@ -683,65 +682,23 @@
       }     
     });      
     
-    
     function getAppLogoHTML(app) {
       const title = (app.title || '').toLowerCase();
-
       const logoMap = [
-        {
-          match: ['visual studio'],
-          src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/visualstudio/visualstudio-plain.svg',
-          alt: 'Visual Studio'
-        },
-        {
-          match: ['vs code', 'vscode', 'visual studio code'],
-          src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg',
-          alt: 'VS Code'
-        },
-        {
-          match: ['eclipse'],
-          src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/eclipse/eclipse-original.svg',
-          alt: 'Eclipse'
-        },
-        {
-          match: ['github'],
-          src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg',
-          alt: 'GitHub'
-        },
-        {
-          match: ['3ds max', '3dsmax', 'max'],
-          src: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/autodesk.svg',
-          alt: 'Autodesk 3ds Max'
-        },
-        {
-          match: ['marktext', 'markdown'],
-          src: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/markdown.svg',
-          alt: 'Markdown'
-        },
-        {
-          match: ['quizn', 'quiz'],
-          src: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/quizlet.svg',
-          alt: 'Quiz'
-        }
+        { match: ['visual studio'], src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/visualstudio/visualstudio-plain.svg', alt: 'Visual Studio' },
+        { match: ['vs code', 'vscode', 'visual studio code'], src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg', alt: 'VS Code' },
+        { match: ['eclipse'], src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/eclipse/eclipse-original.svg', alt: 'Eclipse' },
+        { match: ['github'], src: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg', alt: 'GitHub' },
+        { match: ['3ds max', '3dsmax', 'max'], src: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/autodesk.svg', alt: 'Autodesk 3ds Max' },
+        { match: ['marktext', 'markdown'], src: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/markdown.svg', alt: 'Markdown' },
+        { match: ['quizn', 'quiz'], src: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/quizlet.svg', alt: 'Quiz' }
       ];
-
       const found = logoMap.find(item => item.match.some(keyword => title.includes(keyword)));
-
       if (found) {
-        return `
-          <div class="app-logo-wrap">
-            <img src="${found.src}" alt="${found.alt}" onerror="this.outerHTML='<div class=&quot;app-logo-fallback&quot;>${(app.title || 'A').charAt(0).toUpperCase()}</div>'">
-          </div>
-        `;
+        return `<div class="app-logo-wrap"><img src="${found.src}" alt="${found.alt}" onerror="this.outerHTML='<div class=&quot;app-logo-fallback&quot;>${(app.title || 'A').charAt(0).toUpperCase()}</div>'"></div>`;
       }
-
-      return `
-        <div class="app-logo-wrap">
-          <div class="app-logo-fallback">${(app.title || 'A').charAt(0).toUpperCase()}</div>
-        </div>
-      `;
+      return `<div class="app-logo-wrap"><div class="app-logo-fallback">${(app.title || 'A').charAt(0).toUpperCase()}</div></div>`;
     }
-
 
     function renderApps() {
       const container = document.getElementById('appListContainer');
@@ -1037,7 +994,6 @@
         listContainer.innerHTML = ''; summaryContainer.innerHTML = '';
         const reviews = snapshot.val();
         
-        // 1. 점수 저장 객체 초기화 (내 과목 우선 세팅)
         const scores = {}; 
         subjects.forEach(sub => scores[sub] = { total: 0, count: 0 });
         
@@ -1046,7 +1002,6 @@
         } else {
           const allKeys = Object.keys(reviews).sort((a,b) => reviews[b].timestamp - reviews[a].timestamp);
           
-          // 2. 다른 사람이 쓴 과목들도 DB를 기준으로 모두 scores 객체에 추가
           allKeys.forEach(key => {
             const rev = reviews[key];
             if (!scores[rev.subject]) { scores[rev.subject] = { total: 0, count: 0 }; }
@@ -1071,7 +1026,6 @@
           });
         }
         
-        // 3. 통합된 모든 과목 렌더링
         Object.keys(scores).sort().forEach(sub => {
           const m = scores[sub];
           const avg = m && m.count > 0 ? (m.total / m.count).toFixed(1) : "평가 없음";
@@ -1274,39 +1228,126 @@
       });
     }
 
-    // ✅ 버그 1번 수정: 렌더링 분기 처리
-function toggleBookmark(id, event) {
-  if(event) event.stopPropagation();
-  const item = data.find(x => x.id === id);
-  if(item) {
-    // 1. 클릭한 순간의 스크롤 위치를 정확히 기억
-    const currentScrollY = window.scrollY;
+    // ✅ 스크롤 위치 보존 및 북마크 토글 로직
+    function toggleBookmark(id, event) {
+      if(event) event.stopPropagation();
+      const item = data.find(x => x.id === id);
+      if(item) {
+        // 현재 브라우저의 전체 세로 스크롤 값 저장
+        const windowScroll = window.scrollY;
+        
+        // 보드 영역 내부 스크롤이 있다면 해당 값도 저장
+        const mainBoard = document.getElementById('board');
+        const boardScroll = mainBoard ? mainBoard.scrollTop : 0;
+        
+        // 과목별/주차별 내부 리스트 스크롤이 있다면 전부 저장
+        const cardLists = document.querySelectorAll('.card-list');
+        const listScrolls = Array.from(cardLists).map(list => list.scrollTop);
 
-    item.bookmark = !item.bookmark;
-    saveCurrentStateToFirebase();
-    
-    // 2. 화면을 새로 그립니다 (이 순간 브라우저는 새로운 높이를 계산 중)
-    render(currentMode);
-
-    // 3. [핵심 수정] 10ms(0.01초)의 미세한 여유를 주어, 브라우저가 화면 조립을 끝낸 후 스크롤을 이동시킵니다.
-    setTimeout(() => {
-      window.scrollTo(0, currentScrollY);
-    }, 10);
-  }
-}
-    // ✅ 버그 1번 수정: 삭제 시 렌더링 분기 처리
-    function removeMaterial(id, event) {       
-      if(event) event.stopPropagation();       
-      if(confirm('이 자료집 항목을 삭제할까요?')) { 
-        data = data.filter(x => x.id !== id); 
-        saveCurrentStateToFirebase(); 
+        item.bookmark = !item.bookmark;
+        saveCurrentStateToFirebase();
+        
         if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
           render(currentMode); 
         } else {
           renderSubjectDetail(currentMode);
         }
+
+        // 화면 리렌더링 후, 미세한 시간차를 두고 스크롤 위치 복구
+        setTimeout(() => {
+          window.scrollTo(0, windowScroll);
+          
+          const newBoard = document.getElementById('board');
+          if (newBoard) newBoard.scrollTop = boardScroll;
+          
+          const newCardLists = document.querySelectorAll('.card-list');
+          newCardLists.forEach((list, index) => {
+            if (listScrolls[index] !== undefined) {
+              list.scrollTop = listScrolls[index];
+            }
+          });
+        }, 0);
+      }
+    }
+
+    function removeMaterial(id, event) {       
+      if(event) event.stopPropagation();       
+      if(confirm('이 자료집 항목을 삭제할까요?')) { 
+        const windowScroll = window.scrollY;
+        const mainBoard = document.getElementById('board');
+        const boardScroll = mainBoard ? mainBoard.scrollTop : 0;
+        const cardLists = document.querySelectorAll('.card-list');
+        const listScrolls = Array.from(cardLists).map(list => list.scrollTop);
+
+        data = data.filter(x => x.id !== id); 
+        saveCurrentStateToFirebase(); 
+        
+        if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
+          render(currentMode); 
+        } else {
+          renderSubjectDetail(currentMode);
+        }
+
+        setTimeout(() => {
+          window.scrollTo(0, windowScroll);
+          const newBoard = document.getElementById('board');
+          if (newBoard) newBoard.scrollTop = boardScroll;
+          const newCardLists = document.querySelectorAll('.card-list');
+          newCardLists.forEach((list, index) => {
+            if (listScrolls[index] !== undefined) list.scrollTop = listScrolls[index];
+          });
+        }, 0);
       }     
     }
+
+    // ✅ 원본 가로형 레이아웃 복구 + 아이콘 겹침 방지(z-10) 추가
+    function createCardHtml(item) {       
+      const isBookmarked = item.bookmark;
+      const starIcon = isBookmarked ? '⭐️' : '☆';
+      const starClass = isBookmarked ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
+      
+      const bookmarkBtn = `<button onclick="toggleBookmark(${item.id}, event)" class="relative z-10 text-[14px] p-1 rounded transition-transform ${starClass}" title="즐겨찾기">${starIcon}</button>`;
+      const delBtn = `<button onclick="removeMaterial(${item.id}, event)" class="relative z-10 text-[12px] opacity-40 hover:opacity-100 p-1 hover:bg-error-container rounded transition" title="삭제">🗑️</button>`;       
+      
+      let typeIcon = '🌐';
+      if(item.type === 'file') typeIcon = '📄';
+      if(item.type === 'app') typeIcon = '💻';
+      if(item.type === 'video') typeIcon = '▶️';
+
+      if(!item.type) {
+        if((item.link || '').includes('pdf')) typeIcon = '📄';
+        else if((item.link || '').includes('youtu')) typeIcon = '▶️';
+      }
+
+      let tagsHtml = '';
+      if(item.tags) {
+         const tagArr = item.tags.split(',').map(t => t.trim()).filter(t => t);
+         tagsHtml = tagArr.map(t => `<span class="text-[9px] px-1.5 py-0.5 rounded bg-surface-dim text-on-surface-variant border border-ol-variant">#${t}</span>`).join('');
+      }
+
+      let descHtml = '';
+      if(item.desc) descHtml = `<p class="text-[12px] text-on-surface-variant mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>`;
+
+      return `         
+        <div data-id="${item.id}" onclick="launchTarget('${(item.link || '').replace(/\\/g, '\\\\')}')" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
+          <div class="flex-1 min-w-0 flex flex-col">             
+            <div class="flex items-center gap-3 mb-1">
+              <span class="text-[16px]">${typeIcon}</span>
+              <span class="text-[14px] font-bold text-on-surface break-words leading-snug">${item.title}</span>             
+            </div>
+            ${descHtml}
+            <div class="flex flex-wrap items-center gap-1.5 mt-2">               
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-surface-c text-on-surface-variant font-bold border border-ol-variant/50">${item.subject}</span>               
+              <span class="text-[10px] font-bold text-on-surface-variant opacity-60">${item.week}</span>             
+            </div>           
+            ${tagsHtml ? `<div class="flex flex-wrap gap-1 mt-1.5">${tagsHtml}</div>` : ''}
+          </div>           
+          <div class="flex flex-col items-center gap-1 shrink-0 ml-1">
+            ${bookmarkBtn}
+            ${delBtn}         
+          </div>
+        </div>`;     
+    }   
 
     function render(mode) {       
       currentMode = mode;       
@@ -1394,7 +1435,6 @@ function toggleBookmark(id, event) {
           if(mode === 'week' && itemsInKey.length === 0 && !searchQuery && !activeTagFilter) return;            
           if(mode === 'subject' && itemsInKey.length === 0 && (searchQuery || activeTagFilter)) return;
           
-          // ✅ 기능 개선: max-h-[400px]와 custom-scrollbar 추가로 개별 칸이 너무 길어지지 않게 스크롤 적용
           let columnHtml = `             
             <div class="column flex flex-col w-full bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-sm">               
               <h2 class="text-[15px] font-bold text-primary border-b border-ol-variant pb-2.5 mb-3 text-center">${mode === 'week' ? '📅 ' : '📚 '}${key}</h2>               
@@ -1481,55 +1521,6 @@ function toggleBookmark(id, event) {
       if(filtered.length === 0) html += `<p class="text-center text-[13px] text-on-surface-variant py-4">등록 자료가 존재하지 않습니다.</p>`;       
       html += `</div></div>`;       
       board.innerHTML = html;     
-    }      
-    
-    function createCardHtml(item) {       
-      const isBookmarked = item.bookmark;
-      const starIcon = isBookmarked ? '⭐️' : '☆';
-      const starClass = isBookmarked ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
-      
-      // ✅ 버그 2번 수정: 클릭 영역 중복 현상을 피하기 위해 relative z-10 부여
-      const bookmarkBtn = `<button onclick="toggleBookmark(${item.id}, event)" class="relative z-10 text-[14px] p-1 rounded transition-transform ${starClass}" title="즐겨찾기">${starIcon}</button>`;
-      const delBtn = `<button onclick="removeMaterial(${item.id}, event)" class="relative z-10 text-[12px] opacity-40 hover:opacity-100 p-1 hover:bg-error-container rounded transition" title="삭제">🗑️</button>`;       
-      
-      let typeIcon = '🌐';
-      if(item.type === 'file') typeIcon = '📄';
-      if(item.type === 'app') typeIcon = '💻';
-      if(item.type === 'video') typeIcon = '▶️';
-
-      if(!item.type) {
-        if((item.link || '').includes('pdf')) typeIcon = '📄';
-        else if((item.link || '').includes('youtu')) typeIcon = '▶️';
-      }
-
-      let tagsHtml = '';
-      if(item.tags) {
-         const tagArr = item.tags.split(',').map(t => t.trim()).filter(t => t);
-         tagsHtml = tagArr.map(t => `<span class="text-[9px] px-1.5 py-0.5 rounded bg-surface-dim text-on-surface-variant border border-ol-variant">#${t}</span>`).join('');
-      }
-
-      let descHtml = '';
-      if(item.desc) descHtml = `<p class="text-[12px] text-on-surface-variant mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>`;
-
-      return `         
-        <div data-id="${item.id}" onclick="launchTarget('${(item.link || '').replace(/\\/g, '\\\\')}')" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
-          <div class="flex-1 min-w-0 flex flex-col">             
-            <div class="flex items-center gap-3 mb-1">
-              <span class="text-[16px]">${typeIcon}</span>
-              <span class="text-[14px] font-bold text-on-surface break-words leading-snug">${item.title}</span>             
-            </div>
-            ${descHtml}
-            <div class="flex flex-wrap items-center gap-1.5 mt-2">               
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-surface-c text-on-surface-variant font-bold border border-ol-variant/50">${item.subject}</span>               
-              <span class="text-[10px] font-bold text-on-surface-variant opacity-60">${item.week}</span>             
-            </div>           
-            ${tagsHtml ? `<div class="flex flex-wrap gap-1 mt-1.5">${tagsHtml}</div>` : ''}
-          </div>           
-          <div class="flex flex-col items-center gap-1 shrink-0 ml-1">
-            ${bookmarkBtn}
-            ${delBtn}         
-          </div>
-        </div>`;     
     }      
     
     function updateActiveMenu(mode) {       
