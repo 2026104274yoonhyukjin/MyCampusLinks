@@ -588,51 +588,51 @@
     
     const defaultSubjects = ["게임프로그래밍","게임그래픽 기초","객체 지향 프로그래밍", "프론트엔드프로그래밍"];
     const defaultData = [
-      { id: 1, title: "C# 프로그래밍 첫걸음 (Chapter 01)", week: "1주차", subject: "게임프로그래밍", link: "pdf/ch01.pdf", type: "file" },
-      { id: 2, title: "기본 문법 (Chapter 02)", week: "2주차", subject: "게임프로그래밍", link: "pdf/ch02.pdf", type: "file" },
-      { id: 3, title: "조건문 (Chapter 03)", week: "3주차", subject: "게임프로그래밍", link: "pdf/ch03.pdf", type: "file" },
-      { id: 4, title: "반복문 (Chapter 04)", week: "4주차", subject: "게임프로그래밍", link: "pdf/ch04.pdf", type: "file" },
-      { id: 5, title: "클래스 기본 (Chapter 05)", week: "5주차", subject: "게임프로그래밍", link: "pdf/ch05.pdf", type: "file" },
-      { id: 6, title: "메서드 (Chapter 06)", week: "6주차", subject: "게임프로그래밍", link: "pdf/ch06.pdf", type: "file" },
-      { id: 7, title: "상속과 다형성 (Chapter 07)", week: "7주차", subject: "게임프로그래밍", link: "pdf/ch07.pdf", type: "file" },
+      { id: 1, title: "C# 프로그래밍 첫걸음 (Chapter 01)", week: "1주차", subject: "게임프로그래밍", link: "pdf/ch01.pdf", type: "file", tags: "기초, 이론, PDF" },
+      { id: 2, title: "기본 문법 (Chapter 02)", week: "2주차", subject: "게임프로그래밍", link: "pdf/ch02.pdf", type: "file", tags: "문법, PDF" },
+      { id: 3, title: "조건문 (Chapter 03)", week: "3주차", subject: "게임프로그래밍", link: "pdf/ch03.pdf", type: "file", tags: "제어문, PDF" },
+      { id: 4, title: "반복문 (Chapter 04)", week: "4주차", subject: "게임프로그래밍", link: "pdf/ch04.pdf", type: "file", tags: "제어문, PDF" },
+      { id: 5, title: "클래스 기본 (Chapter 05)", week: "5주차", subject: "게임프로그래밍", link: "pdf/ch05.pdf", type: "file", tags: "객체지향, PDF" },
+      { id: 6, title: "메서드 (Chapter 06)", week: "6주차", subject: "게임프로그래밍", link: "pdf/ch06.pdf", type: "file", tags: "객체지향, PDF" },
+      { id: 7, title: "상속과 다형성 (Chapter 07)", week: "7주차", subject: "게임프로그래밍", link: "pdf/ch07.pdf", type: "file", tags: "객체지향, 심화, PDF" },
       
-      { id: 8, title: "3주차-컵", week: "3주차", subject: "게임그래픽 기초", link: "https://youtu.be/0V7-B76oDb0?si=PeFMPxFw7EPmTvIX", type: "video" },
-      { id: 9, title: "4주차 2차시-접시,스푼", week: "4주차", subject: "게임그래픽 기초", link: "https://youtu.be/v0lMKBo34ds?si=vzMUhstLUf5vWyTm", type: "video" },
-      { id: 10, title: "5주차 1차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/JWFie9eDkGA?si=SR5KlKnALQNkAJ1U", type: "video" },
-      { id: 11, title: "5주차 2차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/BPHuUT0zoKI?si=2E8zRt2wzCqVUpap", type: "video" },
-      { id: 12, title: "5주차 3차시-검,철퇴", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/XvxTYsfnPpI", type: "video" },
-      { id: 13, title: "6주차 1차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/KA9KfMoQhTg?si=pnl3XBBT_rgUec8K", type: "video" },
-      { id: 14, title: "6주차 2차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/DL9LDpRodEg", type: "video" },
-      { id: 15, title: "6주차 3차시-Reset X Form", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/l6c1epTtNVk?si=9LZOjTp8TjOGZvCa", type: "video" },
-      { id: 16, title: "7주차 1차시-캐릭터(몸통)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/oy9rC6YQwfQ?si=iIa3w4etvMySTjXi", type: "video" },
-      { id: 17, title: "7주차 2차시-캐릭터(팔)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/tt-hxXzbWu8?si=zoXrVXOO1LYpQBLW", type: "video" },
-      { id: 18, title: "7주차 3차시-캐릭터(다리,이빨)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/n9sNFonoh4g?si=fC5kPi6sG7FPzMVS", type: "video" },
-      { id: 19, title: "10주차 1차시-인체 캐릭터 특징분석", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/IEzmA-YC7bs?si=AUfPz_gkkBLHrNdx", type: "video" },
-      { id: 20, title: "10주차 2차시-인체(몸통)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/m-Mxw36Ybjk?si=adOxKKQ5pC4pPPmL", type: "video" },
-      { id: 21, title: "10주차 3차시-인체(팔,다리)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/TgfCel9AQlI?si=LfxVTI1xvs_B8Gcc", type: "video" },
-      { id: 22, title: "12주차 1차시-인체(손,발)", week: "12주차", subject: "게임그래픽 기초", link: "https://youtu.be/qHTTJ7woLNg", type: "video" },
+      { id: 8, title: "3주차-컵", week: "3주차", subject: "게임그래픽 기초", link: "https://youtu.be/0V7-B76oDb0?si=PeFMPxFw7EPmTvIX", type: "video", tags: "모델링, 유튜브" },
+      { id: 9, title: "4주차 2차시-접시,스푼", week: "4주차", subject: "게임그래픽 기초", link: "https://youtu.be/v0lMKBo34ds?si=vzMUhstLUf5vWyTm", type: "video", tags: "모델링, 유튜브" },
+      { id: 10, title: "5주차 1차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/JWFie9eDkGA?si=SR5KlKnALQNkAJ1U", type: "video", tags: "편집, 유튜브" },
+      { id: 11, title: "5주차 2차시-세부편집", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/BPHuUT0zoKI?si=2E8zRt2wzCqVUpap", type: "video", tags: "편집, 유튜브" },
+      { id: 12, title: "5주차 3차시-검,철퇴", week: "5주차", subject: "게임그래픽 기초", link: "https://youtu.be/XvxTYsfnPpI", type: "video", tags: "무기제작, 유튜브" },
+      { id: 13, title: "6주차 1차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/KA9KfMoQhTg?si=pnl3XBBT_rgUec8K", type: "video", tags: "축정렬, 유튜브" },
+      { id: 14, title: "6주차 2차시-Allign Pivot", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/DL9LDpRodEg", type: "video", tags: "축정렬, 유튜브" },
+      { id: 15, title: "6주차 3차시-Reset X Form", week: "6주차", subject: "게임그래픽 기초", link: "https://youtu.be/l6c1epTtNVk?si=9LZOjTp8TjOGZvCa", type: "video", tags: "축정렬, 유튜브" },
+      { id: 16, title: "7주차 1차시-캐릭터(몸통)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/oy9rC6YQwfQ?si=iIa3w4etvMySTjXi", type: "video", tags: "캐릭터, 유튜브" },
+      { id: 17, title: "7주차 2차시-캐릭터(팔)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/tt-hxXzbWu8?si=zoXrVXOO1LYpQBLW", type: "video", tags: "캐릭터, 유튜브" },
+      { id: 18, title: "7주차 3차시-캐릭터(다리,이빨)", week: "7주차", subject: "게임그래픽 기초", link: "https://youtu.be/n9sNFonoh4g?si=fC5kPi6sG7FPzMVS", type: "video", tags: "캐릭터, 유튜브" },
+      { id: 19, title: "10주차 1차시-인체 캐릭터 특징분석", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/IEzmA-YC7bs?si=AUfPz_gkkBLHrNdx", type: "video", tags: "인체, 이론, 유튜브" },
+      { id: 20, title: "10주차 2차시-인체(몸통)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/m-Mxw36Ybjk?si=adOxKKQ5pC4pPPmL", type: "video", tags: "인체, 유튜브" },
+      { id: 21, title: "10주차 3차시-인체(팔,다리)", week: "10주차", subject: "게임그래픽 기초", link: "https://youtu.be/TgfCel9AQlI?si=LfxVTI1xvs_B8Gcc", type: "video", tags: "인체, 유튜브" },
+      { id: 22, title: "12주차 1차시-인체(손,발)", week: "12주차", subject: "게임그래픽 기초", link: "https://youtu.be/qHTTJ7woLNg", type: "video", tags: "인체, 유튜브" },
       
-      { id: 23, title: "1장 Java 프로그래밍 언어의 특징", week: "1주차", subject: "객체 지향 프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf", type: "file" },
-      { id: 24, title: "2장-자료형", week: "2주차", subject: "객체 지향 프로그래밍", link: "pdf/2장_자료형.pdf", type: "file" },
-      { id: 25, title: "3장 연산자", week: "3주차", subject: "객체 지향 프로그래밍", link: "pdf/3장_연산자.pdf", type: "file" },
-      { id: 26, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체 지향 프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf", type: "file" },
-      { id: 27, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf", type: "file" },
-      { id: 28, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file" },
-      { id: 29, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file" },
-      { id: 30, title: "8장-클래스의 외부 구성요소", week: "8주차", subject: "객체 지향 프로그래밍", link: "pdf/8장_클래스의_외부_구성요소_(package_import_외부클래스).pdf", type: "file" },
-      { id: 31, title: "9장-자바제어자(modifier)_1", week: "9주차", subject: "객체 지향 프로그래밍", link: "pdf/9장__자바제어자(modifier)_1._(접근지정자_static).pdf", type: "file" },
+      { id: 23, title: "1장 Java 프로그래밍 언어의 특징", week: "1주차", subject: "객체 지향 프로그래밍", link: "pdf/Java_프로그래밍_1주차_강의노트.pdf", type: "file", tags: "Java, 기초, PDF" },
+      { id: 24, title: "2장-자료형", week: "2주차", subject: "객체 지향 프로그래밍", link: "pdf/2장_자료형.pdf", type: "file", tags: "Java, 자료형, PDF" },
+      { id: 25, title: "3장 연산자", week: "3주차", subject: "객체 지향 프로그래밍", link: "pdf/3장_연산자.pdf", type: "file", tags: "Java, 기초, PDF" },
+      { id: 26, title: "4장-제어문과 제어키워드", week: "4주차", subject: "객체 지향 프로그래밍", link: "pdf/4장_제어문과_제어키워드.pdf", type: "file", tags: "Java, 제어문, PDF" },
+      { id: 27, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf", type: "file", tags: "Java, 참조, PDF" },
+      { id: 28, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file", tags: "Java, 클래스, PDF" },
+      { id: 29, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file", tags: "Java, 클래스, PDF" },
+      { id: 30, title: "8장-클래스의 외부 구성요소", week: "8주차", subject: "객체 지향 프로그래밍", link: "pdf/8장_클래스의_외부_구성요소_(package_import_외부클래스).pdf", type: "file", tags: "Java, 패키지, PDF" },
+      { id: 31, title: "9장-자바제어자(modifier)_1", week: "9주차", subject: "객체 지향 프로그래밍", link: "pdf/9장__자바제어자(modifier)_1._(접근지정자_static).pdf", type: "file", tags: "Java, 제어자, PDF" },
       
-      { id: 32, title: "OT 자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT", type: "web" },
-      { id: 33, title: "마크다운 작성방법 참고자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "pdf/마크다운_보충자료.pdf", type: "file" },
-      { id: 34, title: "3주차 수업 자료-HTML Form & UI", week: "3주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week3", type: "web" },
-      { id: 35, title: "4주차 수업 자료-CSS 스타일링 & GitHub 배포", week: "4주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week4", type: "web" },
-      { id: 36, title: "5주차 수업 자료-CSS Layout & 팀 협업", week: "5주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week5", type: "web" },
-      { id: 37, title: "6주차 수업 자료-Flexbox & 반응형 웹", week: "6주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week6", type: "web" },
-      { id: 38, title: "7주차 수업 자료-Grid 레이아웃 & 동적 애니메이션", week: "7주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week7", type: "web" },
-      { id: 39, title: "10주차 수업 자료-실전 팀 빌딩 & README 기반 Git 협업", week: "10주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week10", type: "web" },
-      { id: 40, title: "11주차 수업 자료-개발 착수 & MVP 기반 태스크 관리", week: "11주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week11", type: "web" },
-      { id: 41, title: "12주차 수업 자료-MVP 통합 및 알파 버전 완성", week: "12주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week12", type: "web" },
-      { id: 42, title: "13주차 수업 자료-알파 테스트 피드백 보드", week: "13주차", subject: "프론트엔드프로그래밍", link: "https://www.figma.com/board/XTQk7MT9MuRqokMwAeNRS2/%ED%94%BC%EB%93%9C%EB%B0%B1%EB%B3%B4%EB%93%9C-103-?node-id=0-1&p=f&t=4exAxS5NEkhzxOV3-02", type: "web" }
+      { id: 32, title: "OT 자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT", type: "web", tags: "오리엔테이션" },
+      { id: 33, title: "마크다운 작성방법 참고자료", week: "1주차", subject: "프론트엔드프로그래밍", link: "pdf/마크다운_보충자료.pdf", type: "file", tags: "마크다운, PDF" },
+      { id: 34, title: "3주차 수업 자료-HTML Form & UI", week: "3주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week3", type: "web", tags: "HTML, UI" },
+      { id: 35, title: "4주차 수업 자료-CSS 스타일링 & GitHub 배포", week: "4주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week4", type: "web", tags: "CSS, GitHub" },
+      { id: 36, title: "5주차 수업 자료-CSS Layout & 팀 협업", week: "5주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week5", type: "web", tags: "CSS, Layout" },
+      { id: 37, title: "6주차 수업 자료-Flexbox & 반응형 웹", week: "6주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week6", type: "web", tags: "CSS, 반응형" },
+      { id: 38, title: "7주차 수업 자료-Grid 레이아웃 & 동적 애니메이션", week: "7주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week7", type: "web", tags: "CSS, 애니메이션" },
+      { id: 39, title: "10주차 수업 자료-실전 팀 빌딩 & README 기반 Git 협업", week: "10주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week10", type: "web", tags: "Git, 팀프로젝트" },
+      { id: 40, title: "11주차 수업 자료-개발 착수 & MVP 기반 태스크 관리", week: "11주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week11", type: "web", tags: "MVP, 프로젝트" },
+      { id: 41, title: "12주차 수업 자료-MVP 통합 및 알파 버전 완성", week: "12주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week12", type: "web", tags: "MVP, 프로젝트" },
+      { id: 42, title: "13주차 수업 자료-알파 테스트 피드백 보드", week: "13주차", subject: "프론트엔드프로그래밍", link: "https://www.figma.com/board/XTQk7MT9MuRqokMwAeNRS2/%ED%94%BC%EB%93%9C%EB%B0%B1%EB%B3%B4%EB%93%9C-103-?node-id=0-1&p=f&t=4exAxS5NEkhzxOV3-02", type: "web", tags: "Figma, 피드백" }
       
     ];
 
@@ -1036,36 +1036,43 @@
         if (!listContainer || !summaryContainer) return;
         listContainer.innerHTML = ''; summaryContainer.innerHTML = '';
         const reviews = snapshot.val();
-        const scores = {}; subjects.forEach(sub => scores[sub] = { total: 0, count: 0 });
+        
+        // 1. 점수 저장 객체 초기화 (내 과목 우선 세팅)
+        const scores = {}; 
+        subjects.forEach(sub => scores[sub] = { total: 0, count: 0 });
+        
         if (!reviews) {
           listContainer.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-10 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl">과목 강의평가가 존재하지 않습니다. 첫 평가를 남겨보세요! ⭐️</p>`;
-          subjects.forEach(sub => {
-            const isA = activeReviewFilter === sub;
-            const aC = isA ? "ring-2 ring-primary border-primary bg-primary-fixed/80 cursor-pointer" : "border-ol-variant/60 hover:border-primary hover:bg-surface-c cursor-pointer";
-            summaryContainer.innerHTML += `<div onclick="toggleReviewFilter('${sub}')" class="flex justify-between items-center bg-surface-c-lowest border rounded-lg p-2.5 transition-all ${aC}"><span class="font-semibold text-on-surface truncate max-w-[130px]">${sub}</span><span class="text-on-surface-variant opacity-50">평가 없음 😶</span></div>`;
+        } else {
+          const allKeys = Object.keys(reviews).sort((a,b) => reviews[b].timestamp - reviews[a].timestamp);
+          
+          // 2. 다른 사람이 쓴 과목들도 DB를 기준으로 모두 scores 객체에 추가
+          allKeys.forEach(key => {
+            const rev = reviews[key];
+            if (!scores[rev.subject]) { scores[rev.subject] = { total: 0, count: 0 }; }
+            scores[rev.subject].total += Number(rev.rating); 
+            scores[rev.subject].count += 1; 
           });
-          return;
+
+          const fKeys = activeReviewFilter ? allKeys.filter(k => reviews[k].subject === activeReviewFilter) : allKeys;
+          if (activeReviewFilter && fKeys.length === 0) {
+            listContainer.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-10 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl">선택한 과목에 등록된 강의평이 없습니다. ⭐️</p>`;
+          }
+          
+          fKeys.forEach(key => {
+            const rev = reviews[key];
+            const isAuthorF = currentUser && currentUser.uid === rev.uid;
+            const isAdminF = currentUser && currentUser.email === ADMIN_EMAIL;
+            let dBtn = "";
+            if (isAuthorF) dBtn = `<button onclick="deleteLectureReview('${key}')" class="text-[11px] text-error hover:underline font-bold shrink-0">삭제</button>`;
+            else if (isAdminF) dBtn = `<button onclick="deleteLectureReview('${key}')" class="text-[11px] text-error hover:underline font-bold shrink-0">강제 삭제 🗑️</button>`;
+            const st = "★".repeat(rev.rating) + "☆".repeat(5 - rev.rating);
+            listContainer.innerHTML += `<div class="bg-surface-c-lowest border border-ol-variant rounded-xl p-3.5 flex items-start justify-between gap-4 shadow-2sm"><div class="flex flex-col gap-1 min-w-0"><div class="flex flex-wrap items-center gap-2"><span class="text-[11px] px-2 py-0.5 rounded bg-primary-fixed text-primary font-black">${rev.subject}</span><span class="text-amber-500 font-bold text-[14px] tracking-tight">${st} (${rev.rating}.0)</span><span class="text-[11px] text-on-surface-variant">by ${rev.nickname}</span></div><p class="text-[13px] text-on-surface font-medium break-words mt-1">${rev.reviewText}</p></div>${dBtn}</div>`;
+          });
         }
-        const allKeys = Object.keys(reviews).sort((a,b) => reviews[b].timestamp - reviews[a].timestamp);
-        allKeys.forEach(key => {
-          const rev = reviews[key];
-          if (scores[rev.subject]) { scores[rev.subject].total += Number(rev.rating); scores[rev.subject].count += 1; }
-        });
-        const fKeys = activeReviewFilter ? allKeys.filter(k => reviews[k].subject === activeReviewFilter) : allKeys;
-        if (activeReviewFilter && fKeys.length === 0) {
-          listContainer.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-10 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl">선택한 과목에 등록된 강의평이 없습니다. ⭐️</p>`;
-        }
-        fKeys.forEach(key => {
-          const rev = reviews[key];
-          const isAuthorF = currentUser && currentUser.uid === rev.uid;
-          const isAdminF = currentUser && currentUser.email === ADMIN_EMAIL;
-          let dBtn = "";
-          if (isAuthorF) dBtn = `<button onclick="deleteLectureReview('${key}')" class="text-[11px] text-error hover:underline font-bold shrink-0">삭제</button>`;
-          else if (isAdminF) dBtn = `<button onclick="deleteLectureReview('${key}')" class="text-[11px] text-error hover:underline font-bold shrink-0">강제 삭제 🗑️</button>`;
-          const st = "★".repeat(rev.rating) + "☆".repeat(5 - rev.rating);
-          listContainer.innerHTML += `<div class="bg-surface-c-lowest border border-ol-variant rounded-xl p-3.5 flex items-start justify-between gap-4 shadow-2sm"><div class="flex flex-col gap-1 min-w-0"><div class="flex flex-wrap items-center gap-2"><span class="text-[11px] px-2 py-0.5 rounded bg-primary-fixed text-primary font-black">${rev.subject}</span><span class="text-amber-500 font-bold text-[14px] tracking-tight">${st} (${rev.rating}.0)</span><span class="text-[11px] text-on-surface-variant">by ${rev.nickname}</span></div><p class="text-[13px] text-on-surface font-medium break-words mt-1">${rev.reviewText}</p></div>${dBtn}</div>`;
-        });
-        subjects.forEach(sub => {
+        
+        // 3. 통합된 모든 과목 렌더링
+        Object.keys(scores).sort().forEach(sub => {
           const m = scores[sub];
           const avg = m && m.count > 0 ? (m.total / m.count).toFixed(1) : "평가 없음";
           const sT = m && m.count > 0 ? "★".repeat(Math.round(avg)) : "😶";
@@ -1267,14 +1274,33 @@
       });
     }
 
+    // ✅ 버그 1번 수정: 렌더링 분기 처리
     function toggleBookmark(id, event) {
       if(event) event.stopPropagation(); 
       const item = data.find(x => x.id === id);
       if(item) {
         item.bookmark = !item.bookmark; 
         saveCurrentStateToFirebase();
-        render(currentMode); 
+        if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
+          render(currentMode); 
+        } else {
+          renderSubjectDetail(currentMode);
+        }
       }
+    }
+
+    // ✅ 버그 1번 수정: 삭제 시 렌더링 분기 처리
+    function removeMaterial(id, event) {       
+      if(event) event.stopPropagation();       
+      if(confirm('이 자료집 항목을 삭제할까요?')) { 
+        data = data.filter(x => x.id !== id); 
+        saveCurrentStateToFirebase(); 
+        if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
+          render(currentMode); 
+        } else {
+          renderSubjectDetail(currentMode);
+        }
+      }     
     }
 
     function render(mode) {       
@@ -1328,7 +1354,6 @@
 
       let filtered = data;       
       
-      // 검색어 기반 필터링 (제목, 과목, 주차, 설명, 태그)
       if (searchQuery) {
         filtered = filtered.filter(item => 
           (item.title && item.title.toLowerCase().includes(searchQuery)) || 
@@ -1339,7 +1364,6 @@
         );        
       }
       
-      // 카테고리 태그 기반 상세 필터링
       if (activeTagFilter) {
         filtered = filtered.filter(item => item.tags && item.tags.split(',').map(t => t.trim()).includes(activeTagFilter));
       }
@@ -1365,10 +1389,11 @@
           if(mode === 'week' && itemsInKey.length === 0 && !searchQuery && !activeTagFilter) return;            
           if(mode === 'subject' && itemsInKey.length === 0 && (searchQuery || activeTagFilter)) return;
           
+          // ✅ 기능 개선: max-h-[400px]와 custom-scrollbar 추가로 개별 칸이 너무 길어지지 않게 스크롤 적용
           let columnHtml = `             
             <div class="column flex flex-col w-full bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-sm">               
               <h2 class="text-[15px] font-bold text-primary border-b border-ol-variant pb-2.5 mb-3 text-center">${mode === 'week' ? '📅 ' : '📚 '}${key}</h2>               
-              <div class="card-list flex flex-col gap-2 min-h-[50px]" data-filter-key="${key}" data-filter-mode="${mode}">`;                      
+              <div class="card-list flex flex-col gap-2 min-h-[50px] max-h-[400px] overflow-y-auto custom-scrollbar pr-1" data-filter-key="${key}" data-filter-mode="${mode}">`;                      
           if(itemsInKey.length === 0) {             
             columnHtml += `<p class="text-[12px] text-on-surface-variant opacity-50 py-2 text-center">자료가 없습니다.</p>`;           
           } else {             
@@ -1458,8 +1483,9 @@
       const starIcon = isBookmarked ? '⭐️' : '☆';
       const starClass = isBookmarked ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
       
-      const bookmarkBtn = `<button onclick="toggleBookmark(${item.id}, event)" class="text-[14px] p-1 rounded transition-transform ${starClass}" title="즐겨찾기">${starIcon}</button>`;
-      const delBtn = `<button onclick="removeMaterial(${item.id}, event)" class="text-[12px] opacity-40 hover:opacity-100 p-1 hover:bg-error-container rounded transition" title="삭제">🗑️</button>`;       
+      // ✅ 버그 2번 수정: 클릭 영역 중복 현상을 피하기 위해 relative z-10 부여
+      const bookmarkBtn = `<button onclick="toggleBookmark(${item.id}, event)" class="relative z-10 text-[14px] p-1 rounded transition-transform ${starClass}" title="즐겨찾기">${starIcon}</button>`;
+      const delBtn = `<button onclick="removeMaterial(${item.id}, event)" class="relative z-10 text-[12px] opacity-40 hover:opacity-100 p-1 hover:bg-error-container rounded transition" title="삭제">🗑️</button>`;       
       
       let typeIcon = '🌐';
       if(item.type === 'file') typeIcon = '📄';
@@ -1481,7 +1507,7 @@
       if(item.desc) descHtml = `<p class="text-[12px] text-on-surface-variant mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>`;
 
       return `         
-        <div data-id="${item.id}" onclick="launchTarget('${item.link || ''}')" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
+        <div data-id="${item.id}" onclick="launchTarget('${(item.link || '').replace(/\\/g, '\\\\')}')" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
           <div class="flex-1 min-w-0 flex flex-col">             
             <div class="flex items-center gap-3 mb-1">
               <span class="text-[16px]">${typeIcon}</span>
@@ -1533,11 +1559,6 @@
     
     function removeSubject(name) {       
       if(confirm(`[${name}] 과목을 삭제할까요?`)) { subjects = subjects.filter(x => x !== name); saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode); }     
-    }     
-    
-    function removeMaterial(id, event) {       
-      if(event) event.stopPropagation();       
-      if(confirm('이 자료집 항목을 삭제할까요?')) { data = data.filter(x => x.id !== id); saveCurrentStateToFirebase(); render(currentMode); }     
     }     
     
     function addDDayEvent() {       
