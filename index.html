@@ -1228,77 +1228,62 @@
       });
     }
 
-    // ✅ 스크롤 위치 보존 및 북마크 토글 로직 (개선된 버전)
+    // ✅ 북마크 토글 로직 (부분 업데이트 방식 - 전체 렌더링 없음)
     function toggleBookmark(id, event) {
-      if(event) event.stopPropagation();
+      if(event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      
       const item = data.find(x => x.id === id);
       if(!item) return;
       
-      // 현재 스크롤 상태 저장 (data-filter-key 기반으로 추적)
-      const windowScroll = window.scrollY;
-      const mainBoard = document.getElementById('board');
-      const boardScroll = mainBoard ? mainBoard.scrollTop : 0;
-      
-      // 각 카드 리스트의 스크롤을 data-filter-key 기반으로 저장
-      const scrollMap = {};
-      document.querySelectorAll('.card-list').forEach(list => {
-        const key = list.getAttribute('data-filter-key');
-        if(key) scrollMap[key] = list.scrollTop;
-      });
-
-      // 북마크 토글
+      // 북마크 상태 토글
       item.bookmark = !item.bookmark;
       saveCurrentStateToFirebase();
       
-      if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
-        render(currentMode); 
-      } else {
-        renderSubjectDetail(currentMode);
+      // 해당 카드 요소 찾기 (data-id 속성으로)
+      const cardElement = document.querySelector('[data-id="' + id + '"]');
+      if(!cardElement) return;
+      
+      // 카드 내의 북마크 버튼만 업데이트 (부분 렌더링)
+      const bookmarkBtn = cardElement.querySelector('button[title="즐겨찾기"]');
+      if(bookmarkBtn) {
+        const starIcon = item.bookmark ? '⭐️' : '☆';
+        const starClass = item.bookmark ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
+        bookmarkBtn.innerHTML = starIcon;
+        bookmarkBtn.className = 'relative z-10 text-[14px] p-1 rounded transition-transform ' + starClass;
       }
-
-      // requestAnimationFrame을 사용하여 렌더링 완료 후 스크롤 복구
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          // 윈도우 스크롤 복구
-          window.scrollTo(0, windowScroll);
-          
-          // 보드 스크롤 복구
-          const newBoard = document.getElementById('board');
-          if (newBoard) newBoard.scrollTop = boardScroll;
-          
-          // 각 카드 리스트 스크롤을 data-filter-key 기반으로 복구
-          document.querySelectorAll('.card-list').forEach(list => {
-            const key = list.getAttribute('data-filter-key');
-            if(key && scrollMap[key] !== undefined) {
-              list.scrollTop = scrollMap[key];
-            }
-          });
-        });
-      });
+      
+      // 북마크 보관함 모드일 때만 전체 렌더링
+      if(currentMode === 'bookmark') {
+        render('bookmark');
+      }
     }
 
     function removeMaterial(id, event) {       
-      if(event) event.stopPropagation();       
+      if(event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }       
       if(confirm('이 자료집 항목을 삭제할까요?')) { 
-        // 현재 스크롤 상태 저장 (data-filter-key 기반)
-        const windowScroll = window.scrollY;
-        const mainBoard = document.getElementById('board');
-        const boardScroll = mainBoard ? mainBoard.scrollTop : 0;
-        
-        const scrollMap = {};
-        document.querySelectorAll('.card-list').forEach(list => {
-          const key = list.getAttribute('data-filter-key');
-          if(key) scrollMap[key] = list.scrollTop;
-        });
-
+        // 데이터에서 삭제
         data = data.filter(x => x.id !== id); 
         saveCurrentStateToFirebase(); 
         
-        if (['subject', 'week', 'all', 'etc', 'bookmark', 'community'].includes(currentMode)) {
-          render(currentMode); 
-        } else {
-          renderSubjectDetail(currentMode);
+        // 카드 요소 제거 (부분 렌더링)
+        const cardElement = document.querySelector('[data-id="' + id + '"]');
+        if(cardElement) {
+          cardElement.style.opacity = '0';
+          cardElement.style.transform = 'scale(0.95)';
+          cardElement.style.transition = 'all 0.2s ease';
+          
+          setTimeout(() => {
+            cardElement.remove();
+          }, 200);
         }
+      }     
+    }
 
         // requestAnimationFrame을 사용하여 렌더링 완료 후 스크롤 복구
         requestAnimationFrame(() => {
@@ -1344,7 +1329,7 @@
       if(item.desc) descHtml = `<p class="text-[12px] text-on-surface-variant mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>`;
 
       return `         
-        <div data-id="${item.id}" onclick="launchTarget('${(item.link || '').replace(/\\/g, '\\\\')}')" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
+        <div data-id="${item.id}" data-link="${(item.link || '').replace(/\\/g, '\\\\')}" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
           <div class="flex-1 min-w-0 flex flex-col">             
             <div class="flex items-center gap-3 mb-1">
               <span class="text-[16px]">${typeIcon}</span>
@@ -1410,6 +1395,16 @@
         });
         html += `</div>`;
         board.innerHTML = html;
+
+        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
+        document.querySelectorAll('.kanban-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            // 버튼 클릭이 아닌 경우만 처리
+            if(e.target.closest('button')) return;
+            const link = this.getAttribute('data-link');
+            if(link) launchTarget(link);
+          });
+        });
         return;
       }
 
@@ -1437,6 +1432,16 @@
         if(bookmarkedOnly.length === 0) html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full">표시할 즐겨찾기 자료가 없습니다.</p>`;
         html += `</div>`;
         board.innerHTML = html;
+
+        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
+        document.querySelectorAll('.kanban-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            // 버튼 클릭이 아닌 경우만 처리
+            if(e.target.closest('button')) return;
+            const link = this.getAttribute('data-link');
+            if(link) launchTarget(link);
+          });
+        });
         return;
       }
 
@@ -1463,7 +1468,26 @@
           gridWrapperHtml += columnHtml;         
         });         
         gridWrapperHtml += `</div>`;         
-        board.innerHTML = gridWrapperHtml;       
+        board.innerHTML = gridWrapperHtml;
+
+        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
+        document.querySelectorAll('.kanban-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            // 버튼 클릭이 아닌 경우만 처리
+            if(e.target.closest('button')) return;
+            const link = this.getAttribute('data-link');
+            if(link) launchTarget(link);
+          });
+        });
+        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
+        document.querySelectorAll('.kanban-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            // 버튼 클릭이 아닌 경우만 처리
+            if(e.target.closest('button')) return;
+            const link = this.getAttribute('data-link');
+            if(link) launchTarget(link);
+          });
+        });       
 
         if (typeof Sortable !== 'undefined') {
           document.querySelectorAll('.card-list').forEach(el => {
@@ -1516,6 +1540,16 @@
         filtered.forEach(item => html += createCardHtml(item));         
         html += `</div>`;         
         board.innerHTML = html;       
+
+        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
+        document.querySelectorAll('.kanban-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            // 버튼 클릭이 아닌 경우만 처리
+            if(e.target.closest('button')) return;
+            const link = this.getAttribute('data-link');
+            if(link) launchTarget(link);
+          });
+        });
       }     
     }      
     
@@ -1536,6 +1570,16 @@
       if(filtered.length === 0) html += `<p class="text-center text-[13px] text-on-surface-variant py-4">등록 자료가 존재하지 않습니다.</p>`;       
       html += `</div></div>`;       
       board.innerHTML = html;     
+
+        // 카드 클릭 이벤트 리스너 추가 (data-link 기반)
+        document.querySelectorAll('.kanban-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            // 버튼 클릭이 아닌 경우만 처리
+            if(e.target.closest('button')) return;
+            const link = this.getAttribute('data-link');
+            if(link) launchTarget(link);
+          });
+        });
     }      
     
     function updateActiveMenu(mode) {       
