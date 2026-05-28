@@ -1150,23 +1150,44 @@
     
     function restoreDefaultData() {       
       if(confirm('기본 탑재 고정형 수업자료를 복구하여 추가하시겠습니까? (내 자료 유지)')) {         
-        defaultSubjects.forEach(s => { if(!subjects.includes(s)) subjects.push(s); });         
-        defaultData.forEach(d => { if(!data.some(x => x.title === d.title)) data.push(d); });         
+        // 1. 과목 복구 (중복 제외)
+        defaultSubjects.forEach(s => { 
+          if(!subjects.includes(s)) subjects.push(s); 
+        });         
+        
+        // 2. 수업 자료 복구 (ID 기반 중복 체크)
+        defaultData.forEach(d => { 
+          const isDuplicate = data.some(x => x.id === d.id || x.title === d.title);
+          if(!isDuplicate) {
+            data.push(JSON.parse(JSON.stringify(d)));
+          } 
+        });         
+        
+        // ID 순서대로 정렬하여 순서 유지
+        data.sort((a, b) => (a.id || 0) - (b.id || 0));
+
+        // 3. D-Day 복구
         defaultDDayList.forEach(d => { 
           if(!ddayList.some(x => x.title === d.title)) {
-            ddayList.push({ id: Date.now() + Math.floor(Math.random() * 1000), title: d.title, date: d.date });
+            ddayList.push({ id: d.id || Date.now(), title: d.title, date: d.date });
           }
         });
-        defaultApps.forEach(a => { if(!apps.some(x => x.title === a.title)) apps.push(a); });
+        
+        // 4. 앱 복구
+        defaultApps.forEach(a => { 
+          if(!apps.some(x => x.title === a.title)) {
+            apps.push(JSON.parse(JSON.stringify(a)));
+          } 
+        });
         
         saveCurrentStateToFirebase(); 
         updateSidebarSubjects(); 
         renderApps();
         renderDDayList();
         render(currentMode); 
-        alert('복구가 성료되었습니다.');       
+        alert('복구가 완료되었습니다. (중복 항목은 제외되었습니다)');       
       }     
-    }      
+    }
     
     function updateSidebarSubjects() {       
       const container = document.getElementById('sidebarSubjectList');       
@@ -1325,8 +1346,7 @@
             });
           });
         });
-    
-
+      
     // ✅ 원본 가로형 레이아웃 복구 + 아이콘 겹침 방지(z-10) 추가
     function createCardHtml(item) {       
       const isBookmarked = item.bookmark;
