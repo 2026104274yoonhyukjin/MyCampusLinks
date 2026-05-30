@@ -323,6 +323,7 @@
                 <option value="13주차">13주차</option><option value="14주차">14주차</option><option value="15주차">15주차</option>
               </select>
               <select id="filterSort" onchange="render(currentMode)" class="px-3 py-1.5 text-[13px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary max-w-[120px] truncate">
+                <option value="custom">수동 정렬 (기본)</option>
                 <option value="newest">최신순</option>
                 <option value="oldest">오래된 순</option>
               </select>
@@ -723,6 +724,73 @@
       }     
     });      
     
+    // --- ✅ 모든 뷰에서 작동하는 통합 카드 드래그 앤 드롭 정렬 함수 ---
+    function initCardSortable() {
+      if (typeof Sortable === 'undefined') return;
+      document.querySelectorAll('.card-list').forEach(el => {
+        new Sortable(el, {
+          group: 'shared', 
+          animation: 150,
+          delay: 150, 
+          delayOnTouchOnly: false, 
+          fallbackTolerance: 5,
+          ghostClass: 'sortable-ghost',
+          dragClass: 'sortable-drag',
+          onEnd: function (evt) {
+            if (evt.oldIndex === evt.newIndex && evt.from === evt.to) return;
+            
+            // 전체 보기에서 드래그 시 자동으로 '수동 정렬' 모드로 스위칭
+            const filterSortEl = document.getElementById('filterSort');
+            if (filterSortEl && filterSortEl.value !== 'custom') {
+                filterSortEl.value = 'custom';
+            }
+
+            const itemEl = evt.item;
+            const itemId = Number(itemEl.getAttribute('data-id'));
+            const fromKey = evt.from.getAttribute('data-filter-key');
+            const toKey = evt.to.getAttribute('data-filter-key');
+
+            // 과목 간 이동 처리
+            const itemIndex = data.findIndex(x => x.id === itemId);
+            if(itemIndex > -1 && fromKey && toKey && fromKey !== toKey) {
+              data[itemIndex].subject = toKey;
+            }
+
+            // 현재 화면에 표시된 모든 카드의 새로운 DOM 순서 수집
+            const allVisibleIds = [];
+            document.querySelectorAll('.card-list').forEach(list => {
+              Array.from(list.children).forEach(child => {
+                const id = Number(child.getAttribute('data-id'));
+                if(id) allVisibleIds.push(id);
+              });
+            });
+
+            // 필터링 등으로 숨겨진 아이템들의 순서를 보호하면서 표시된 카드들만 안전하게 재정렬
+            const originalIndices = [];
+            allVisibleIds.forEach(id => {
+              const idx = data.findIndex(d => d.id === id);
+              if (idx !== -1) originalIndices.push(idx);
+            });
+            originalIndices.sort((a, b) => a - b);
+
+            const itemsToReorder = allVisibleIds.map(id => data.find(d => d.id === id)).filter(Boolean);
+
+            itemsToReorder.forEach((item, i) => {
+              data[originalIndices[i]] = item;
+            });
+
+            saveCurrentStateToFirebase();
+            
+            if (['subject', 'all', 'bookmark'].includes(currentMode)) {
+              render(currentMode);
+            } else if (currentMode !== 'community' && currentMode !== 'etc') {
+              renderSubjectDetail(currentMode);
+            }
+          }
+        });
+      });
+    }
+
     function getAppLogoHTML(app) {
       const title = (app.title || '').toLowerCase();
       const logoMap = [
@@ -1496,7 +1564,7 @@
 
         if (sSort === 'newest') {
           filtered.sort((a,b) => b.id - a.id);
-        } else {
+        } else if (sSort === 'oldest') {
           filtered.sort((a,b) => a.id - b.id);
         }
       } else {
@@ -1540,10 +1608,10 @@
 
       if (mode === 'bookmark') {
         boardTitle.innerText = "⭐️ 즐겨찾기 보관함";
-        let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+        let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">`;
         const bookmarkedOnly = filtered.filter(item => item.bookmark); 
         bookmarkedOnly.forEach(item => html += createCardHtml(item));
-        if(bookmarkedOnly.length === 0) html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full">표시할 즐겨찾기 자료가 없습니다.</p>`;
+        if(bookmarkedOnly.length === 0) html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full text-center">표시할 즐겨찾기 자료가 없습니다.</p>`;
         html += `</div>`;
         board.innerHTML = html;
 
@@ -1554,6 +1622,8 @@
             if(link) launchTarget(link);
           });
         });
+
+        initCardSortable(); // 즐겨찾기 뷰 드래그 앤 드롭 활성화
         return;
       }
 
@@ -1564,9 +1634,6 @@
         subjects.forEach(key => {           
           const itemsInKey = filtered.filter(x => x.subject === key);           
           if(itemsInKey.length === 0 && searchQuery) return;
-          
-          // ✅ 핵심 수정 부분: 홈 화면 과목 보드에서 생성된 순서대로(id 오름차순) 정렬 
-          itemsInKey.sort((a, b) => a.id - b.id);
           
           let columnHtml = `             
             <div class="column flex flex-col w-full bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-sm">               
@@ -1591,53 +1658,11 @@
           });
         });       
 
-        if (typeof Sortable !== 'undefined') {
-          document.querySelectorAll('.card-list').forEach(el => {
-            new Sortable(el, {
-              group: 'shared', 
-              animation: 150,
-              delay: 150, 
-              delayOnTouchOnly: false, 
-              fallbackTolerance: 5,
-              ghostClass: 'sortable-ghost',
-              dragClass: 'sortable-drag',
-              onEnd: function (evt) {
-                if (evt.oldIndex === evt.newIndex && evt.from === evt.to) return;
-                
-                const itemEl = evt.item;
-                const itemId = Number(itemEl.getAttribute('data-id'));
-                const fromKey = evt.from.getAttribute('data-filter-key');
-                const toKey = evt.to.getAttribute('data-filter-key');
-
-                const itemIndex = data.findIndex(x => x.id === itemId);
-                if(itemIndex > -1 && fromKey !== toKey) {
-                  data[itemIndex].subject = toKey;
-                }
-
-                const allVisibleIds = [];
-                document.querySelectorAll('.card-list').forEach(list => {
-                  Array.from(list.children).forEach(child => {
-                    const id = Number(child.getAttribute('data-id'));
-                    if(id) allVisibleIds.push(id);
-                  });
-                });
-
-                const visibleItems = data.filter(d => allVisibleIds.includes(d.id));
-                const hiddenItems = data.filter(d => !allVisibleIds.includes(d.id));
-
-                visibleItems.sort((a, b) => allVisibleIds.indexOf(a.id) - allVisibleIds.indexOf(b.id));
-                data = [...visibleItems, ...hiddenItems]; 
-
-                saveCurrentStateToFirebase();
-                render(currentMode); 
-              }
-            });
-          });
-        }
+        initCardSortable(); // 과목별 뷰 드래그 앤 드롭 활성화
 
       } else if (mode === 'all') {         
         boardTitle.innerText = "전체 리스트 대시보드";         
-        let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;         
+        let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">`;         
         filtered.forEach(item => html += createCardHtml(item));         
         html += `</div>`;         
         if (filtered.length === 0) {
@@ -1653,6 +1678,8 @@
             if(link) launchTarget(link);
           });
         });
+
+        initCardSortable(); // 전체 보기 뷰 드래그 앤 드롭 활성화
       }     
     }      
     
@@ -1670,24 +1697,23 @@
       
       document.getElementById('categorySearchBar').classList.add('hidden');
 
-      let html = `<div class="bg-surface-c-low border border-ol-variant rounded-xl p-5 shadow-sm max-w-3xl mx-auto w-full"><div class="card-list flex flex-col gap-2.5">`;       
+      let html = `<div class="bg-surface-c-low border border-ol-variant rounded-xl p-5 shadow-sm max-w-3xl mx-auto w-full"><div class="card-list flex flex-col gap-2.5" data-filter-key="${subjectName}">`;       
       const filtered = data.filter(item => item.subject === subjectName && (!searchQuery || item.title.toLowerCase().includes(searchQuery)));       
-      
-      // 단독 보기에서도 원래 순서(오름차순)대로 나오도록 정렬 추가
-      filtered.sort((a,b) => a.id - b.id);
       
       filtered.forEach(item => html += createCardHtml(item));       
       if(filtered.length === 0) html += `<p class="text-center text-[13px] text-on-surface-variant py-4">등록 자료가 존재하지 않습니다.</p>`;       
       html += `</div></div>`;       
       board.innerHTML = html;     
 
-        document.querySelectorAll('.kanban-card').forEach(card => {
-          card.addEventListener('click', function(e) {
-            if(e.target.closest('button')) return;
-            const link = this.getAttribute('data-link');
-            if(link) launchTarget(link);
-          });
+      document.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+          if(e.target.closest('button')) return;
+          const link = this.getAttribute('data-link');
+          if(link) launchTarget(link);
         });
+      });
+
+      initCardSortable(); // 단독 과목 뷰 드래그 앤 드롭 활성화
     }      
     
     function updateActiveMenu(mode) {       
