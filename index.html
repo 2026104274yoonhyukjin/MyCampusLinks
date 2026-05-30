@@ -323,7 +323,6 @@
                 <option value="13주차">13주차</option><option value="14주차">14주차</option><option value="15주차">15주차</option>
               </select>
               <select id="filterSort" onchange="render(currentMode)" class="px-3 py-1.5 text-[13px] rounded-lg border border-ol-variant bg-surface-c-lowest text-on-surface focus:outline-none focus:border-primary max-w-[120px] truncate">
-                <option value="custom">수동 정렬 (기본)</option>
                 <option value="newest">최신순</option>
                 <option value="oldest">오래된 순</option>
               </select>
@@ -587,6 +586,8 @@
     let ddayList = [];     
     let personalEvents = [];
     let apps = [];      
+    let bookmarkOrder = []; // ✅ 즐겨찾기 전용 독립 순서 저장 배열 추가
+
     let currentMode = 'subject'; 
     let searchQuery = ''; 
     let calDate = new Date(); 
@@ -704,10 +705,11 @@
             subjects = val.subjects || []; data = val.data || [];             
             ddayList = val.ddayList || []; personalEvents = val.personalEvents || [];           
             apps = val.apps || [...defaultApps];
+            bookmarkOrder = val.bookmarkOrder || [];
           } else {             
             subjects = [...defaultSubjects]; data = [...defaultData];             
             ddayList = [...defaultDDayList]; personalEvents = [];             
-            apps = [...defaultApps];
+            apps = [...defaultApps]; bookmarkOrder = [];
             saveCurrentStateToFirebase();           
           }           
           updateSidebarSubjects(); renderDDayList(); renderApps(); render(currentMode);           
@@ -722,27 +724,36 @@
       }     
     });      
     
-    // --- ✅ 딜레이 없는 손잡이(Handle) 드래그 및 순서 보장 정렬 함수 ---
+    // --- ✅ 딜레이 없는 손잡이(Handle) 전용 드래그 & 완벽한 뷰별 독립 정렬 함수 ---
     function initCardSortable() {
       if (typeof Sortable === 'undefined') return;
+      
+      // 전체보기, 기타자료 등에서는 아예 드래그 기능을 비활성화시켜버립니다 (홈 순서 꼬임 방지)
+      if (currentMode === 'all' || currentMode === 'etc' || currentMode === 'community') return;
+
       document.querySelectorAll('.card-list').forEach(el => {
         new Sortable(el, {
-          group: 'shared', 
-          handle: '.drag-handle', // 👈 핸들(손잡이)을 잡았을 때만 드래그 허용
+          group: currentMode === 'bookmark' ? 'bookmark' : 'shared', // 북마크는 외부 교환 방지
+          handle: '.drag-handle', // 👈 핸들(손잡이)을 잡았을 때만! 꾹 누르는 딜레이 삭제
           animation: 150,
-          // 👈 딜레이 삭제: 꾹 누르지 않아도 바로 드래그 가능
           fallbackTolerance: 5,
           ghostClass: 'sortable-ghost',
           dragClass: 'sortable-drag',
           onEnd: function (evt) {
             if (evt.oldIndex === evt.newIndex && evt.from === evt.to) return;
             
-            // 전체 보기에서 드래그 시 자동으로 '수동 정렬' 모드로 스위칭
-            const filterSortEl = document.getElementById('filterSort');
-            if (filterSortEl && filterSortEl.value !== 'custom') {
-                filterSortEl.value = 'custom';
+            // ✅ 1. 즐겨찾기 보관함일 경우: 글로벌 data 냅두고 즐겨찾기 전용 순서만 저장!
+            if (currentMode === 'bookmark') {
+                const newOrder = [];
+                document.querySelectorAll('#board .kanban-card').forEach(card => {
+                    newOrder.push(Number(card.getAttribute('data-id')));
+                });
+                bookmarkOrder = newOrder;
+                saveCurrentStateToFirebase();
+                return; // 여기서 로직 종료. 홈 자료 순서는 전혀 건드리지 않음
             }
 
+            // ✅ 2. 홈(과목별 보기) 및 과목 단독 보기일 경우: 홈 전용 글로벌 순서 변경
             const itemEl = evt.item;
             const itemId = Number(itemEl.getAttribute('data-id'));
             const fromKey = evt.from.getAttribute('data-filter-key');
@@ -751,35 +762,38 @@
             const itemIndex = data.findIndex(x => x.id === itemId);
             if (itemIndex === -1) return;
 
-            // 과목 간 이동 처리 (Home 보기에서 기둥 변경 시)
-            if(fromKey && toKey && fromKey !== toKey) {
+            // 과목 간 이동 처리
+            if (fromKey && toKey && fromKey !== toKey) {
               data[itemIndex].subject = toKey;
             }
 
-            // 👈 더 정확한 글로벌 인덱스 계산 (데이터 꼬임 방지)
-            const nextSibling = itemEl.nextElementSibling;
-            let insertIndex = data.length; // 기본적으로 맨 뒤로
+            // 표시된 카드들의 새로운 순서를 글로벌 데이터에 매핑
+            const allVisibleIds = [];
+            document.querySelectorAll('.card-list').forEach(list => {
+              Array.from(list.children).forEach(child => {
+                const id = Number(child.getAttribute('data-id'));
+                if(id) allVisibleIds.push(id);
+              });
+            });
 
-            if (nextSibling) {
-               const nextId = Number(nextSibling.getAttribute('data-id'));
-               insertIndex = data.findIndex(d => d.id === nextId);
-            }
+            const originalIndices = [];
+            allVisibleIds.forEach(id => {
+              const idx = data.findIndex(d => d.id === id);
+              if (idx !== -1) originalIndices.push(idx);
+            });
+            originalIndices.sort((a, b) => a - b);
 
-            const currentIndex = data.findIndex(d => d.id === itemId);
-            if (currentIndex > -1) {
-               const [draggedItem] = data.splice(currentIndex, 1);
-               // 아이템 하나를 뺐기 때문에, 들어갈 목표 인덱스가 현재보다 컸다면 1칸 당겨줌
-               if (insertIndex > currentIndex && insertIndex <= data.length) {
-                   insertIndex--;
-               }
-               data.splice(insertIndex < 0 ? data.length : insertIndex, 0, draggedItem);
-            }
+            const itemsToReorder = allVisibleIds.map(id => data.find(d => d.id === id)).filter(Boolean);
+
+            itemsToReorder.forEach((item, i) => {
+              data[originalIndices[i]] = item;
+            });
 
             saveCurrentStateToFirebase();
             
-            if (['subject', 'all', 'bookmark'].includes(currentMode)) {
-              render(currentMode);
-            } else if (currentMode !== 'community' && currentMode !== 'etc') {
+            if (['subject'].includes(currentMode)) {
+              render(currentMode); // 뷰 업데이트
+            } else if (currentMode !== 'community' && currentMode !== 'etc' && currentMode !== 'all' && currentMode !== 'bookmark') {
               renderSubjectDetail(currentMode);
             }
           }
@@ -1246,7 +1260,14 @@
     
     function saveCurrentStateToFirebase() {       
       if (!currentUser) return;       
-      database.ref('users/' + currentUser.uid).set({ subjects: subjects, data: data, ddayList: ddayList, personalEvents: personalEvents, apps: apps });     
+      database.ref('users/' + currentUser.uid).set({ 
+        subjects: subjects, 
+        data: data, 
+        ddayList: ddayList, 
+        personalEvents: personalEvents, 
+        apps: apps,
+        bookmarkOrder: bookmarkOrder // ✅ 북마크 순서 저장
+      });     
     }      
     
     function handleAuth() {       
@@ -1362,7 +1383,7 @@
       if(window.subjectSortable) window.subjectSortable.destroy();
       if(typeof Sortable !== 'undefined') {
         window.subjectSortable = new Sortable(container, {
-          handle: '.sidebar-drag-handle', // 사이드바도 핸들로만 조작
+          handle: '.sidebar-drag-handle',
           animation: 150,
           ghostClass: 'opacity-50',
           onEnd: function (evt) {
@@ -1431,6 +1452,13 @@
       if(!item) return;
       
       item.bookmark = !item.bookmark;
+      
+      // ✅ 즐겨찾기 배열에도 ID 추가/삭제
+      if (item.bookmark) {
+        if (!bookmarkOrder.includes(id)) bookmarkOrder.push(id);
+      } else {
+        bookmarkOrder = bookmarkOrder.filter(x => x !== id);
+      }
       saveCurrentStateToFirebase();
       
       const cardElement = document.querySelector('[data-id="' + id + '"]');
@@ -1455,7 +1483,8 @@
         event.preventDefault();
       }       
       if(confirm('이 자료집 항목을 삭제할까요?')) { 
-        data = data.filter(x => x.id !== id); 
+        data = data.filter(x => x.id !== id);
+        bookmarkOrder = bookmarkOrder.filter(x => x !== id); // 깔끔한 삭제 처리
         saveCurrentStateToFirebase(); 
         
         const cardElement = document.querySelector('[data-id="' + id + '"]');
@@ -1493,14 +1522,14 @@
       let descHtml = '';
       if(item.desc) descHtml = `<p class="text-[12px] text-on-surface-variant mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>`;
 
-      // 👈 드래그 손잡이 UI
+      // ✅ 점선 핸들 렌더링. 이제 카드의 빈 공간을 누르면 실행되고, 핸들을 잡아야만 드래그됨!
       const dragHandleHtml = showDragHandle ? `
-        <div class="drag-handle cursor-grab active:cursor-grabbing text-on-surface-variant opacity-30 hover:opacity-100 flex items-center justify-center shrink-0 pt-0.5" title="손잡이를 드래그하여 순서 변경">
+        <div class="drag-handle cursor-grab active:cursor-grabbing text-on-surface-variant opacity-30 hover:opacity-100 flex items-center justify-center shrink-0 pt-0.5 px-1" title="손잡이를 드래그하여 순서 변경">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
         </div>` : '';
 
       return `         
-        <div data-id="${item.id}" data-link="${(item.link || '').replace(/\\/g, '\\\\')}" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
+        <div data-id="${item.id}" data-link="${(item.link || '').replace(/\\/g, '\\\\')}" class="kanban-card flex items-start gap-2 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
           ${dragHandleHtml}
           <div class="flex-1 min-w-0 flex flex-col">             
             <div class="flex items-center gap-3 mb-1">
@@ -1600,7 +1629,7 @@
 
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            // 버튼이나 핸들을 누른 경우에는 카드의 클릭 이벤트 무시
+            // 버튼이나 핸들을 누른 경우에는 카드의 클릭 이벤트(링크이동) 무시
             if(e.target.closest('button') || e.target.closest('.drag-handle')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
@@ -1610,15 +1639,20 @@
       }
 
       if (mode === 'bookmark') {
-        boardTitle.innerText = "⭐️ 즐겨찾기 보관함 (최근 등록순)";
-        let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">`;
+        boardTitle.innerText = "⭐️ 즐겨찾기 보관함 (좌측 ≡ 핸들을 드래그하여 이동)";
+        let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full" data-filter-mode="bookmark">`;
         const bookmarkedOnly = filtered.filter(item => item.bookmark);
         
-        // 👈 홈(과목별) 자료 순서가 섞이는 것을 방지하기 위해 즐겨찾기 탭은 
-        // 드래그를 허용하지 않고 무조건 최신 등록순으로 고정 배열합니다.
-        bookmarkedOnly.sort((a,b) => b.id - a.id);
-        
-        bookmarkedOnly.forEach(item => html += createCardHtml(item, false)); // 👈 false: 드래그 핸들 숨김 처리
+        // ✅ 홈 뷰와 독립적으로 북마크 전용 순서에 따라 정렬!
+        bookmarkedOnly.sort((a, b) => {
+            let idxA = bookmarkOrder.indexOf(a.id);
+            let idxB = bookmarkOrder.indexOf(b.id);
+            if (idxA === -1) idxA = 999999 + a.id; 
+            if (idxB === -1) idxB = 999999 + b.id;
+            return idxA - idxB;
+        });
+
+        bookmarkedOnly.forEach(item => html += createCardHtml(item, true)); // 드래그 핸들 표시
         if(bookmarkedOnly.length === 0) html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full text-center">표시할 즐겨찾기 자료가 없습니다.</p>`;
         html += `</div>`;
         board.innerHTML = html;
@@ -1631,7 +1665,7 @@
           });
         });
 
-        // 👈 드래그 앤 드롭 함수(initCardSortable)를 호출하지 않아 원천적으로 순서 꼬임을 방지합니다.
+        initCardSortable(); // 북마크 전용 정렬 실행
         return;
       }
 
@@ -1669,9 +1703,11 @@
         initCardSortable(); 
 
       } else if (mode === 'all') {         
-        boardTitle.innerText = "전체 리스트 대시보드 (좌측 ≡ 핸들을 드래그하여 이동)";         
+        boardTitle.innerText = "전체 리스트 대시보드 (최신순 / 오래된순 전용 뷰)";         
         let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">`;         
-        filtered.forEach(item => html += createCardHtml(item, true));         
+        
+        // ✅ 전체 보기에서는 드래그 핸들을 끄고(false) 순서 섞임을 완전 차단
+        filtered.forEach(item => html += createCardHtml(item, false));         
         html += `</div>`;         
         if (filtered.length === 0) {
           board.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-8 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl w-full">조건에 맞는 자료가 없습니다.</p>`;
@@ -1687,7 +1723,7 @@
           });
         });
 
-        initCardSortable(); 
+        // ❌ initCardSortable() 호출 생략 -> '전체 보기'에서는 드래그 원천 차단
       }     
     }      
     
@@ -1721,7 +1757,7 @@
         });
       });
 
-      initCardSortable();
+      initCardSortable(); // 과목 단독 보기 드래그 허용
     }      
     
     function updateActiveMenu(mode) {       
