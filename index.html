@@ -95,7 +95,7 @@
     
     .progress-bar { transition: width 0.3s ease; }
     
-    .sortable-ghost { opacity: 0.4; transform: scale(0.98); background-color: var(--surface-c); border: 2px dashed var(--primary); }
+    .sortable-ghost { opacity: 0.4; transform: scale(0.98); }
     .sortable-drag { cursor: grabbing !important; }
   
     .app-logo-wrap {
@@ -306,7 +306,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">           
           <div>            
             <h3 id="boardTitle" class="text-[18px] md:text-[20px] font-semibold text-on-surface">저장 자료</h3>             
-            <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드 (좌측 ≡ 핸들을 드래그하여 이동)</p>           
+            <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드 (꾹 눌러서 이동)</p>           
           </div>           
           
           <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2">             
@@ -555,9 +555,34 @@
           <button onclick="openAddPersonalEventPrompt()" class="text-[11px] px-2 py-1 bg-primary text-white rounded hover:opacity-90 font-medium">＋ 개인 일정 등록</button>         
         </div>         
         <div id="selectedDateDetailsContainer" class="flex flex-col gap-1.5 max-h-[120px] overflow-y-auto text-[12px]"></div>       
-      </div>     
-    </div>   
-  </div>    
+      </div> 
+      
+      <!-- 수정본 05-30 -->
+<div class="mt-8">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-lg font-semibold flex items-center gap-2">
+      <span>⭐</span> 즐겨찾기 보관함
+    </h2>
+    <button class="text-sm bg-primary text-on-primary px-4 py-2 rounded-lg">기본 자료 복구</button>
+  </div>
+
+  <div class="flex flex-col gap-4 mb-6 items-end">
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <span class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">과목별 분류:</span>
+      <button class="bg-primary text-on-primary text-[13px] px-3 py-1 rounded-full">전체</button>
+      <button class="bg-surface-c text-on-surface text-[13px] px-3 py-1 rounded-full hover:bg-surface-c-high">프론트엔드</button>
+    </div>
+    
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <span class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">주차별 분류:</span>
+      <button class="bg-primary text-on-primary text-[13px] px-3 py-1 rounded-full">전체</button>
+      <button class="bg-surface-c text-on-surface text-[13px] px-3 py-1 rounded-full hover:bg-surface-c-high">1주차</button>
+    </div>
+  </div>
+
+
+
+  
 
   <script>     
     const ADMIN_EMAIL = '2026104274yoonhyukjin@gmail.com'; 
@@ -586,8 +611,6 @@
     let ddayList = [];     
     let personalEvents = [];
     let apps = [];      
-    let bookmarkOrder = []; // ✅ 즐겨찾기 전용 독립 순서 저장 배열 추가
-
     let currentMode = 'subject'; 
     let searchQuery = ''; 
     let calDate = new Date(); 
@@ -660,6 +683,8 @@
       { id: 27, title: "5장-참조자료형", week: "5주차", subject: "객체 지향 프로그래밍", link: "pdf/5장_참조자료형.pdf", type: "file" },
       { id: 28, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file" },
       { id: 29, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file" },
+      { id: 28, title: "6장-클래스(class)의_기본_문법", week: "6주차", subject: "객체 지향 프로그래밍", link: "pdf/6장_클래스(class)의_기본_문법.pdf", type: "file" },
+      { id: 29, title: "7장-클래스 내부 구성요소", week: "7주차", subject: "객체 지향 프로그래밍", link: "pdf/7장_클래스_내부_구성요소_1_(필드메서드생성자).pdf", type: "file" },
       { id: 30, title: "8장-클래스의 외부 구성요소", week: "8주차", subject: "객체 지향 프로그래밍", link: "pdf/8장_클래스의_외부_구성요소_(package_import_외부클래스).pdf", type: "file" },
       { id: 31, title: "9장-자바제어자(modifier)_1", week: "9주차", subject: "객체 지향 프로그래밍", link: "pdf/9장__자바제어자(modifier)_1._(접근지정자_static).pdf", type: "file" },
       
@@ -705,11 +730,10 @@
             subjects = val.subjects || []; data = val.data || [];             
             ddayList = val.ddayList || []; personalEvents = val.personalEvents || [];           
             apps = val.apps || [...defaultApps];
-            bookmarkOrder = val.bookmarkOrder || [];
           } else {             
             subjects = [...defaultSubjects]; data = [...defaultData];             
             ddayList = [...defaultDDayList]; personalEvents = [];             
-            apps = [...defaultApps]; bookmarkOrder = [];
+            apps = [...defaultApps];
             saveCurrentStateToFirebase();           
           }           
           updateSidebarSubjects(); renderDDayList(); renderApps(); render(currentMode);           
@@ -724,83 +748,6 @@
       }     
     });      
     
-    // --- ✅ 딜레이 없는 손잡이(Handle) 전용 드래그 & 완벽한 뷰별 독립 정렬 함수 ---
-    function initCardSortable() {
-      if (typeof Sortable === 'undefined') return;
-      
-      // 전체보기, 기타자료 등에서는 아예 드래그 기능을 비활성화시켜버립니다 (홈 순서 꼬임 방지)
-      if (currentMode === 'all' || currentMode === 'etc' || currentMode === 'community') return;
-
-      document.querySelectorAll('.card-list').forEach(el => {
-        new Sortable(el, {
-          group: currentMode === 'bookmark' ? 'bookmark' : 'shared', // 북마크는 외부 교환 방지
-          handle: '.drag-handle', // 👈 핸들(손잡이)을 잡았을 때만! 꾹 누르는 딜레이 삭제
-          animation: 150,
-          fallbackTolerance: 5,
-          ghostClass: 'sortable-ghost',
-          dragClass: 'sortable-drag',
-          onEnd: function (evt) {
-            if (evt.oldIndex === evt.newIndex && evt.from === evt.to) return;
-            
-            // ✅ 1. 즐겨찾기 보관함일 경우: 글로벌 data 냅두고 즐겨찾기 전용 순서만 저장!
-            if (currentMode === 'bookmark') {
-                const newOrder = [];
-                document.querySelectorAll('#board .kanban-card').forEach(card => {
-                    newOrder.push(Number(card.getAttribute('data-id')));
-                });
-                bookmarkOrder = newOrder;
-                saveCurrentStateToFirebase();
-                return; // 여기서 로직 종료. 홈 자료 순서는 전혀 건드리지 않음
-            }
-
-            // ✅ 2. 홈(과목별 보기) 및 과목 단독 보기일 경우: 홈 전용 글로벌 순서 변경
-            const itemEl = evt.item;
-            const itemId = Number(itemEl.getAttribute('data-id'));
-            const fromKey = evt.from.getAttribute('data-filter-key');
-            const toKey = evt.to.getAttribute('data-filter-key');
-            
-            const itemIndex = data.findIndex(x => x.id === itemId);
-            if (itemIndex === -1) return;
-
-            // 과목 간 이동 처리
-            if (fromKey && toKey && fromKey !== toKey) {
-              data[itemIndex].subject = toKey;
-            }
-
-            // 표시된 카드들의 새로운 순서를 글로벌 데이터에 매핑
-            const allVisibleIds = [];
-            document.querySelectorAll('.card-list').forEach(list => {
-              Array.from(list.children).forEach(child => {
-                const id = Number(child.getAttribute('data-id'));
-                if(id) allVisibleIds.push(id);
-              });
-            });
-
-            const originalIndices = [];
-            allVisibleIds.forEach(id => {
-              const idx = data.findIndex(d => d.id === id);
-              if (idx !== -1) originalIndices.push(idx);
-            });
-            originalIndices.sort((a, b) => a - b);
-
-            const itemsToReorder = allVisibleIds.map(id => data.find(d => d.id === id)).filter(Boolean);
-
-            itemsToReorder.forEach((item, i) => {
-              data[originalIndices[i]] = item;
-            });
-
-            saveCurrentStateToFirebase();
-            
-            if (['subject'].includes(currentMode)) {
-              render(currentMode); // 뷰 업데이트
-            } else if (currentMode !== 'community' && currentMode !== 'etc' && currentMode !== 'all' && currentMode !== 'bookmark') {
-              renderSubjectDetail(currentMode);
-            }
-          }
-        });
-      });
-    }
-
     function getAppLogoHTML(app) {
       const title = (app.title || '').toLowerCase();
       const logoMap = [
@@ -1260,14 +1207,7 @@
     
     function saveCurrentStateToFirebase() {       
       if (!currentUser) return;       
-      database.ref('users/' + currentUser.uid).set({ 
-        subjects: subjects, 
-        data: data, 
-        ddayList: ddayList, 
-        personalEvents: personalEvents, 
-        apps: apps,
-        bookmarkOrder: bookmarkOrder // ✅ 북마크 순서 저장
-      });     
+      database.ref('users/' + currentUser.uid).set({ subjects: subjects, data: data, ddayList: ddayList, personalEvents: personalEvents, apps: apps });     
     }      
     
     function handleAuth() {       
@@ -1374,7 +1314,7 @@
       subjects.forEach(sub => {         
         container.innerHTML += `           
           <div data-id="${sub}" class="group flex items-center justify-between gap-1 px-4 py-1.5 rounded hover:bg-secondary-container text-[13px] text-on-surface select-none active:bg-surface-c-high transition-colors">             
-            <span class="sidebar-drag-handle text-on-surface-variant opacity-40 mr-1 cursor-grab active:cursor-grabbing">☰</span>
+            <span class="text-on-surface-variant opacity-40 mr-1 cursor-grab active:cursor-grabbing">☰</span>
             <span onclick="renderSubjectDetail('${sub}')" class="cursor-pointer font-medium truncate flex-1 hover:text-primary">📚 ${sub}</span>             
             <button onclick="removeSubject('${sub}')" class="opacity-0 group-hover:opacity-100 text-[11px] text-error hover:font-bold px-1 transition">✕</button>           
           </div>`;       
@@ -1383,8 +1323,9 @@
       if(window.subjectSortable) window.subjectSortable.destroy();
       if(typeof Sortable !== 'undefined') {
         window.subjectSortable = new Sortable(container, {
-          handle: '.sidebar-drag-handle',
           animation: 150,
+          delay: 150, 
+          delayOnTouchOnly: false, 
           ghostClass: 'opacity-50',
           onEnd: function (evt) {
             if (evt.oldIndex === evt.newIndex) return;
@@ -1443,39 +1384,36 @@
     }
 
     // 북마크 토글 로직 
-    function toggleBookmark(id, event) {
-      if(event) {
-        event.stopPropagation();
-        event.preventDefault();
-      }
-      const item = data.find(x => x.id === id);
-      if(!item) return;
-      
-      item.bookmark = !item.bookmark;
-      
-      // ✅ 즐겨찾기 배열에도 ID 추가/삭제
-      if (item.bookmark) {
-        if (!bookmarkOrder.includes(id)) bookmarkOrder.push(id);
-      } else {
-        bookmarkOrder = bookmarkOrder.filter(x => x !== id);
-      }
-      saveCurrentStateToFirebase();
-      
-      const cardElement = document.querySelector('[data-id="' + id + '"]');
-      if(!cardElement) return;
-      
-      const bookmarkBtn = cardElement.querySelector('button[title="즐겨찾기"]');
-      if(bookmarkBtn) {
-        const starIcon = item.bookmark ? '⭐️' : '☆';
-        const starClass = item.bookmark ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
-        bookmarkBtn.innerHTML = starIcon;
-        bookmarkBtn.className = 'relative z-10 text-[14px] p-1 rounded transition-transform ' + starClass;
-      }
-      
-      if(currentMode === 'bookmark') {
-        render('bookmark');
-      }
-    }
+    //05-31 const item = data.find(x => x.id === id); 를 data.findIndex(x => x.id == id); 로 변경
+function toggleBookmark(id, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const item = data.find(x => x.id == id);
+  if (!item) return;
+
+  item.bookmark = !item.bookmark;
+  saveCurrentStateToFirebase();
+
+  // 디자인을 직접 바꾸지 말고 바로 render('bookmark')를 실행해 화면을 갱신
+  if (currentMode === 'bookmark') {
+    render('bookmark');
+    return; 
+  }
+
+
+  const cardElement = document.querySelector('[data-id="' + id + '"]');
+  if (!cardElement) return;
+
+  const bookmarkBtn = cardElement.querySelector('button[title="즐겨찾기"]');
+  if (bookmarkBtn) {
+    const starIcon = item.bookmark ? '⭐️' : '☆';
+    const starClass = item.bookmark ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
+    bookmarkBtn.innerHTML = starIcon;
+    bookmarkBtn.className = 'relative z-10 text-[14px] p-1 rounded transition-transform ' + starClass;
+  }
+}
 
     function removeMaterial(id, event) {       
       if(event) {
@@ -1483,8 +1421,7 @@
         event.preventDefault();
       }       
       if(confirm('이 자료집 항목을 삭제할까요?')) { 
-        data = data.filter(x => x.id !== id);
-        bookmarkOrder = bookmarkOrder.filter(x => x !== id); // 깔끔한 삭제 처리
+        data = data.filter(x => x.id !== id); 
         saveCurrentStateToFirebase(); 
         
         const cardElement = document.querySelector('[data-id="' + id + '"]');
@@ -1501,7 +1438,7 @@
     }
 
     // 카드 생성 HTML
-    function createCardHtml(item, showDragHandle = true) {       
+    function createCardHtml(item) {       
       const isBookmarked = item.bookmark;
       const starIcon = isBookmarked ? '⭐️' : '☆';
       const starClass = isBookmarked ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
@@ -1522,15 +1459,8 @@
       let descHtml = '';
       if(item.desc) descHtml = `<p class="text-[12px] text-on-surface-variant mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>`;
 
-      // ✅ 점선 핸들 렌더링. 이제 카드의 빈 공간을 누르면 실행되고, 핸들을 잡아야만 드래그됨!
-      const dragHandleHtml = showDragHandle ? `
-        <div class="drag-handle cursor-grab active:cursor-grabbing text-on-surface-variant opacity-30 hover:opacity-100 flex items-center justify-center shrink-0 pt-0.5 px-1" title="손잡이를 드래그하여 순서 변경">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-        </div>` : '';
-
       return `         
-        <div data-id="${item.id}" data-link="${(item.link || '').replace(/\\/g, '\\\\')}" class="kanban-card flex items-start gap-2 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
-          ${dragHandleHtml}
+        <div data-id="${item.id}" data-link="${(item.link || '').replace(/\\/g, '\\\\')}" class="kanban-card flex items-start gap-3 p-3.5 rounded-xl bg-surface-c-lowest border border-ol-variant hover:border-primary hover:-translate-y-1 shadow-sm transition duration-200 cursor-pointer">           
           <div class="flex-1 min-w-0 flex flex-col">             
             <div class="flex items-center gap-3 mb-1">
               <span class="text-[16px]">${typeIcon}</span>
@@ -1595,7 +1525,7 @@
 
         if (sSort === 'newest') {
           filtered.sort((a,b) => b.id - a.id);
-        } else if (sSort === 'oldest') {
+        } else {
           filtered.sort((a,b) => a.id - b.id);
         }
       } else {
@@ -1629,8 +1559,7 @@
 
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            // 버튼이나 핸들을 누른 경우에는 카드의 클릭 이벤트(링크이동) 무시
-            if(e.target.closest('button') || e.target.closest('.drag-handle')) return;
+            if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
           });
@@ -1638,44 +1567,113 @@
         return;
       }
 
-      if (mode === 'bookmark') {
-        boardTitle.innerText = "⭐️ 즐겨찾기 보관함 (좌측 ≡ 핸들을 드래그하여 이동)";
-        let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full" data-filter-mode="bookmark">`;
-        const bookmarkedOnly = filtered.filter(item => item.bookmark);
+      ////05-30
+if (mode === 'bookmark') {
+    // 1. 즐겨찾기 전용 필터 기본값 안전하게 초기화
+    if (typeof window.currentBookmarkSubject === 'undefined') window.currentBookmarkSubject = 'all';
+    if (typeof window.currentBookmarkWeek === 'undefined') window.currentBookmarkWeek = 'all';
+
+    boardTitle.innerText = "⭐️ 즐겨찾기 보관함";
+    
+    // 2. 메인 화면의 filtered 영향을 받지 않도록 전체 원본 데이터에서 즐겨찾기만 추출
+    const bookmarkedOnly = data.filter(item => item.bookmark);
+
+    // 3. 안전장치: 즐겨찾기 해제로 인해 현재 선택된 필터 카테고리의 데이터가 아예 사라지면 필터를 'all'로 리셋
+    if (window.currentBookmarkSubject !== 'all' && !bookmarkedOnly.some(item => item.subject === window.currentBookmarkSubject)) {
+        window.currentBookmarkSubject = 'all';
+    }
+    if (window.currentBookmarkWeek !== 'all' && !bookmarkedOnly.some(item => item.week === window.currentBookmarkWeek)) {
+        window.currentBookmarkWeek = 'all';
+    }
+
+    // 4. 동적 필터링을 위한 소스 추출 (과목 선택 시 주차가, 주차 선택 시 과목 필터가 정상적으로 좁혀짐)
+    const subjectSource = (window.currentBookmarkWeek !== 'all') 
+        ? bookmarkedOnly.filter(item => item.week === window.currentBookmarkWeek) 
+        : bookmarkedOnly;
         
-        // ✅ 홈 뷰와 독립적으로 북마크 전용 순서에 따라 정렬!
-        bookmarkedOnly.sort((a, b) => {
-            let idxA = bookmarkOrder.indexOf(a.id);
-            let idxB = bookmarkOrder.indexOf(b.id);
-            if (idxA === -1) idxA = 999999 + a.id; 
-            if (idxB === -1) idxB = 999999 + b.id;
-            return idxA - idxB;
-        });
+    const weekSource = (window.currentBookmarkSubject !== 'all') 
+        ? bookmarkedOnly.filter(item => item.subject === window.currentBookmarkSubject) 
+        : bookmarkedOnly;
 
-        bookmarkedOnly.forEach(item => html += createCardHtml(item, true)); // 드래그 핸들 표시
-        if(bookmarkedOnly.length === 0) html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full text-center">표시할 즐겨찾기 자료가 없습니다.</p>`;
-        html += `</div>`;
-        board.innerHTML = html;
+    const dynamicSubjects = [...new Set(subjectSource.map(item => item.subject))].filter(Boolean);
+    const dynamicWeeks = [...new Set(weekSource.map(item => item.week))].filter(Boolean);
+    
+    // 주차 정렬 ('상시' 같은 문자열이 섞여있어도 안전하게 정렬)
+    const sortedWeeks = [...dynamicWeeks].sort((a, b) => {
+        const numA = parseInt(a);
+        const numB = parseInt(b);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return String(a).localeCompare(String(b));
+    });
 
-        document.querySelectorAll('.kanban-card').forEach(card => {
-          card.addEventListener('click', function(e) {
-            if(e.target.closest('button') || e.target.closest('.drag-handle')) return;
+    // 5. 동적 필터 UI 조립 
+    let html = `
+      <div class="flex flex-col gap-3 p-4 bg-[var(--surface-c-low)] rounded-xl border border-ol-variant mb-6 w-full text-left">
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="text-[12px] font-bold text-on-surface-variant">과목:</span>
+            <select onchange="window.currentBookmarkSubject=this.value; render('bookmark')" 
+                    class="text-[12px] px-3 py-1.5 rounded-lg border border-ol-variant bg-[var(--surface-c-high)] text-on-surface focus:ring-2 focus:ring-primary outline-none font-medium">
+              <option value="all" ${window.currentBookmarkSubject === 'all' ? 'selected' : ''} class="bg-[var(--surface-c-high)] text-on-surface">전체 과목</option>
+              ${dynamicSubjects.map(sub => `<option value="${sub}" ${window.currentBookmarkSubject === sub ? 'selected' : ''} class="bg-[var(--surface-c-high)] text-on-surface">${sub}</option>`).join('')}
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[12px] font-bold text-on-surface-variant">주차:</span>
+            <select onchange="window.currentBookmarkWeek=this.value; render('bookmark')" 
+                    class="text-[12px] px-3 py-1.5 rounded-lg border border-ol-variant bg-[var(--surface-c-high)] text-on-surface focus:ring-2 focus:ring-primary outline-none font-medium">
+              <option value="all" ${window.currentBookmarkWeek === 'all' ? 'selected' : ''} class="bg-[var(--surface-c-high)] text-on-surface">전체 주차</option>
+              ${sortedWeeks.map(wk => `<option value="${wk}" ${window.currentBookmarkWeek === wk ? 'selected' : ''} class="bg-[var(--surface-c-high)] text-on-surface">${wk}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+    `;
+
+    // 6. 셀렉트 박스 선택 값에 따른 최종 화면 출력 데이터 필터링
+    let displayData = bookmarkedOnly;
+    if (window.currentBookmarkSubject !== 'all') {
+        displayData = displayData.filter(item => item.subject === window.currentBookmarkSubject);
+    }
+    if (window.currentBookmarkWeek !== 'all') {
+        displayData = displayData.filter(item => item.week === window.currentBookmarkWeek);
+    }
+
+    // 7. 카드 마크업 생성 
+    displayData.forEach(item => {
+        html += createCardHtml(item); 
+    });
+
+    if (displayData.length === 0) {
+        html += `<p class="text-[13px] text-on-surface-variant py-4 col-span-full text-left">표시할 즐겨찾기 자료가 없습니다.</p>`;
+    }
+    
+    html += `</div>`;
+    board.innerHTML = html;
+
+    // 8. 클릭 이벤트 바인딩 
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
-            if(link) launchTarget(link);
-          });
+            if (link) launchTarget(link);
         });
-
-        initCardSortable(); // 북마크 전용 정렬 실행
-        return;
-      }
+    });
+    return;
+}
+      //05-30 end
 
       if (mode === 'subject') {         
-        boardTitle.innerText = "내 과목별 타임라인 보드 (좌측 ≡ 핸들을 드래그하여 이동)";                  
+        boardTitle.innerText = "내 과목별 타임라인 보드";                  
         let gridWrapperHtml = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full items-start">`;         
         
         subjects.forEach(key => {           
           const itemsInKey = filtered.filter(x => x.subject === key);           
           if(itemsInKey.length === 0 && searchQuery) return;
+          
+          // ✅ 핵심 수정 부분: 홈 화면 과목 보드에서 생성된 순서대로(id 오름차순) 정렬 
+          itemsInKey.sort((a, b) => a.id - b.id);
           
           let columnHtml = `             
             <div class="column flex flex-col w-full bg-surface-c-low border border-ol-variant rounded-xl p-4 shadow-sm">               
@@ -1684,7 +1682,7 @@
           if(itemsInKey.length === 0) {             
             columnHtml += `<p class="text-[12px] text-on-surface-variant opacity-50 py-2 text-center">자료가 없습니다.</p>`;           
           } else {             
-            itemsInKey.forEach(item => columnHtml += createCardHtml(item, true));           
+            itemsInKey.forEach(item => columnHtml += createCardHtml(item));           
           }           
           columnHtml += `</div></div>`;           
           gridWrapperHtml += columnHtml;         
@@ -1694,20 +1692,60 @@
 
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            if(e.target.closest('button') || e.target.closest('.drag-handle')) return;
+            if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
           });
         });       
 
-        initCardSortable(); 
+        if (typeof Sortable !== 'undefined') {
+          document.querySelectorAll('.card-list').forEach(el => {
+            new Sortable(el, {
+              group: 'shared', 
+              animation: 150,
+              delay: 150, 
+              delayOnTouchOnly: false, 
+              fallbackTolerance: 5,
+              ghostClass: 'sortable-ghost',
+              dragClass: 'sortable-drag',
+              onEnd: function (evt) {
+                if (evt.oldIndex === evt.newIndex && evt.from === evt.to) return;
+                
+                const itemEl = evt.item;
+                const itemId = Number(itemEl.getAttribute('data-id'));
+                const fromKey = evt.from.getAttribute('data-filter-key');
+                const toKey = evt.to.getAttribute('data-filter-key');
+
+                const itemIndex = data.findIndex(x => x.id === itemId);
+                if(itemIndex > -1 && fromKey !== toKey) {
+                  data[itemIndex].subject = toKey;
+                }
+
+                const allVisibleIds = [];
+                document.querySelectorAll('.card-list').forEach(list => {
+                  Array.from(list.children).forEach(child => {
+                    const id = Number(child.getAttribute('data-id'));
+                    if(id) allVisibleIds.push(id);
+                  });
+                });
+
+                const visibleItems = data.filter(d => allVisibleIds.includes(d.id));
+                const hiddenItems = data.filter(d => !allVisibleIds.includes(d.id));
+
+                visibleItems.sort((a, b) => allVisibleIds.indexOf(a.id) - allVisibleIds.indexOf(b.id));
+                data = [...visibleItems, ...hiddenItems]; 
+
+                saveCurrentStateToFirebase();
+                render(currentMode); 
+              }
+            });
+          });
+        }
 
       } else if (mode === 'all') {         
-        boardTitle.innerText = "전체 리스트 대시보드 (최신순 / 오래된순 전용 뷰)";         
-        let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">`;         
-        
-        // ✅ 전체 보기에서는 드래그 핸들을 끄고(false) 순서 섞임을 완전 차단
-        filtered.forEach(item => html += createCardHtml(item, false));         
+        boardTitle.innerText = "전체 리스트 대시보드";         
+        let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;         
+        filtered.forEach(item => html += createCardHtml(item));         
         html += `</div>`;         
         if (filtered.length === 0) {
           board.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-8 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl w-full">조건에 맞는 자료가 없습니다.</p>`;
@@ -1717,13 +1755,11 @@
 
         document.querySelectorAll('.kanban-card').forEach(card => {
           card.addEventListener('click', function(e) {
-            if(e.target.closest('button') || e.target.closest('.drag-handle')) return;
+            if(e.target.closest('button')) return;
             const link = this.getAttribute('data-link');
             if(link) launchTarget(link);
           });
         });
-
-        // ❌ initCardSortable() 호출 생략 -> '전체 보기'에서는 드래그 원천 차단
       }     
     }      
     
@@ -1741,23 +1777,24 @@
       
       document.getElementById('categorySearchBar').classList.add('hidden');
 
-      let html = `<div class="bg-surface-c-low border border-ol-variant rounded-xl p-5 shadow-sm max-w-3xl mx-auto w-full"><div class="card-list flex flex-col gap-2.5" data-filter-key="${subjectName}">`;       
+      let html = `<div class="bg-surface-c-low border border-ol-variant rounded-xl p-5 shadow-sm max-w-3xl mx-auto w-full"><div class="card-list flex flex-col gap-2.5">`;       
       const filtered = data.filter(item => item.subject === subjectName && (!searchQuery || item.title.toLowerCase().includes(searchQuery)));       
       
-      filtered.forEach(item => html += createCardHtml(item, true));       
+      // 단독 보기에서도 원래 순서(오름차순)대로 나오도록 정렬 추가
+      filtered.sort((a,b) => a.id - b.id);
+      
+      filtered.forEach(item => html += createCardHtml(item));       
       if(filtered.length === 0) html += `<p class="text-center text-[13px] text-on-surface-variant py-4">등록 자료가 존재하지 않습니다.</p>`;       
       html += `</div></div>`;       
       board.innerHTML = html;     
 
-      document.querySelectorAll('.kanban-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-          if(e.target.closest('button') || e.target.closest('.drag-handle')) return;
-          const link = this.getAttribute('data-link');
-          if(link) launchTarget(link);
+        document.querySelectorAll('.kanban-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            if(e.target.closest('button')) return;
+            const link = this.getAttribute('data-link');
+            if(link) launchTarget(link);
+          });
         });
-      });
-
-      initCardSortable(); // 과목 단독 보기 드래그 허용
     }      
     
     function updateActiveMenu(mode) {       
@@ -1789,9 +1826,19 @@
       subjects.push(name); saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode); closeSubjectModal();     
     }     
     
-    function removeSubject(name) {       
-      if(confirm(`[${name}] 과목을 삭제할까요?`)) { subjects = subjects.filter(x => x !== name); saveCurrentStateToFirebase(); updateSidebarSubjects(); render(currentMode); }     
-    }     
+function removeSubject(name) { 
+  if(confirm(`[${name}] 과목을 삭제할까요?`)) { 
+    // 1. 과목 이름 삭제
+    subjects = subjects.filter(x => x !== name); 
+    
+    // 2. [강제 삭제] 즐겨찾기(bookmark) 상태와 상관없이 
+    // subject가 name인 모든 항목을 무조건 필터링해서 제거
+    data = data.filter(item => item.subject !== name); 
+    
+    // 3. 서버에 상태 저장 (이제 즐겨찾기 정보도 함께 업데이트됨)
+    saveCurrentStateToFirebase();  updateSidebarSubjects(); render(currentMode); 
+  } 
+}
     
     function addDDayEvent() {       
       const title = document.getElementById('newDDayTitle').value.trim(); const date = document.getElementById('newDDayDate').value;       
@@ -2047,8 +2094,8 @@
     }
   </script> 
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+ <script>
+  document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
 });
 </script>
