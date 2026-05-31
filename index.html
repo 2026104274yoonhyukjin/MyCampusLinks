@@ -306,7 +306,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">           
           <div>            
             <h3 id="boardTitle" class="text-[18px] md:text-[20px] font-semibold text-on-surface">저장 자료</h3>             
-            <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드 (좌측 ≡ 핸들을 드래그하여 이동)</p>           
+            <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드</p>           
           </div>           
           
           <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2">             
@@ -1622,7 +1622,7 @@
       board.innerHTML = ''; 
       updateActiveMenu(mode);        
 
-      let filtered = data;       
+      let filtered = [...data];       
       
       if (searchQuery) {
         filtered = filtered.filter(item => 
@@ -1709,7 +1709,7 @@
           });
         });
         
-        initCardSortable(); 
+        initCardSortable(); // 기타 보기 드래그 활성화
         return;
       }
 
@@ -1846,7 +1846,7 @@
         boardTitle.innerText = "전체 리스트 대시보드 (좌측 ≡ 핸들을 드래그하여 이동)";         
         let html = `<div class="card-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full" data-filter-mode="all">`;         
         
-        filtered.forEach(item => html += createCardHtml(item, true));
+        filtered.forEach(item => html += createCardHtml(item, true)); // 핸들 허용
         html += `</div>`;         
         
         if (filtered.length === 0) {
@@ -1863,7 +1863,7 @@
           });
         });
 
-        initCardSortable(); 
+        initCardSortable(); // ✅ 전체보기 드래그 앤 드롭 활성화
       }     
       
       // lucide 아이콘 동적 렌더링 호출
@@ -2197,8 +2197,8 @@
     }
   </script> 
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+ <script>
+  document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 </script>
