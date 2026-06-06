@@ -79,7 +79,7 @@
     .toggle-dot { position:absolute; left:2px; top:2px; width:20px; height:20px; border-radius:9999px; background:var(--surface-c-lowest); transition:transform 0.2s; }     
     :root:has(#darkToggle:checked) .toggle-dot { transform:translateX(20px); }      
     
-    /* 다크모드에서 날짜 선택 아이콘 색상을 흰색으로 반전 */
+    /* 다크모드 날짜 선택 아이콘 색상 반전 */
     :root:has(#darkToggle:checked) input[type="date"]::-webkit-calendar-picker-indicator {
       filter: invert(1);
       cursor: pointer;
@@ -144,6 +144,25 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ol-variant); border-radius: 8px; border: 2px solid var(--surface); }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    /* 팀 방 연결 모달 CSS */
+    .room-badge {
+      background-color: var(--surface-c);
+      color: var(--on-surface);
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: bold;
+      border: 1px solid var(--ol-variant);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .room-badge.active {
+      background-color: var(--primary-fixed);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
   </style> 
 
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -253,6 +272,19 @@
       </div>       
       
       <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-ol-variant">         
+        
+        <div class="flex items-center gap-2 mr-2 border-r border-ol-variant pr-4">
+          <span id="roomStatusBadge" class="room-badge">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i> 내 공간
+          </span>
+          <button onclick="openRoomModal()" class="text-[12px] font-bold px-3 py-1.5 rounded-lg bg-surface-c text-on-surface hover:bg-surface-dim transition-colors shadow-sm" title="독립된 팀 방으로 이동">
+            팀 연결
+          </button>
+          <button id="leaveRoomBtn" onclick="leaveTeamRoom()" class="hidden text-[12px] font-bold px-3 py-1.5 rounded-lg border border-error text-error hover:bg-error-container transition-colors shadow-sm" title="팀 방에서 나가 내 공간으로 돌아가기">
+            방 나가기
+          </button>
+        </div>
+
         <button onclick="openCalendarModal()" class="bg-primary text-white text-[13px] font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition shadow-sm">           
           <i data-lucide="calendar-days" class="w-4 h-4"></i> 학사 달력         
         </button>         
@@ -268,79 +300,6 @@
           <span class="text-[16px]">🌙</span>         
         </label>       
       </div>     
-
-<!-- 팀 연결 UI (header 근처 추가) -->
-<button onclick="openTeamModal()" class="bg-primary text-white px-3 py-2 rounded-lg">
-👥 팀 연결하기
-</button>
-
-<div id="teamModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-  <div class="bg-white p-6 rounded-xl w-96">
-    <h3 class="font-bold text-lg mb-3">팀 전용 방 연결</h3>
-    <input id="teamCodeInput" placeholder="팀 코드 입력 (예: Ab15lt)"
-      class="w-full border p-2 rounded mb-2">
-    <div class="flex gap-2">
-      <button onclick="createTeamRoom()">방 만들기</button>
-      <button onclick="joinTeamRoom()">입장하기</button>
-    </div>
-  </div>
-</div>
-
-<script>
-let currentTeamCode = localStorage.getItem('teamCode') || null;
-
-function createTeamRoom(){
-  const code = Math.random().toString(36).substring(2,8);
-  database.ref('teamRooms/'+code).set({
-    createdAt: Date.now()
-  });
-  currentTeamCode = code;
-  localStorage.setItem('teamCode', code);
-  alert('팀 코드 생성 완료: ' + code);
-}
-
-function joinTeamRoom(){
-  const code = document.getElementById('teamCodeInput').value.trim();
-  if(!code) return;
-
-  database.ref('teamRooms/'+code).once('value').then(s=>{
-    if(!s.exists()) return alert('존재하지 않는 팀 코드입니다.');
-
-    currentTeamCode = code;
-    localStorage.setItem('teamCode', code);
-    alert('입장 완료!');
-    loadTeamChat();
-  });
-}
-
-function sendTeamMessage(){
-  if(!currentTeamCode) return;
-
-  database.ref('teamRooms/'+currentTeamCode+'/chat').push({
-    uid: currentUser.uid,
-    email: currentUser.email,
-    message: document.getElementById('teamMsg').value,
-    createdAt: Date.now()
-  });
-}
-
-function loadTeamChat(){
-  database.ref('teamRooms/'+currentTeamCode+'/chat')
-  .on('value', snap=>{
-    const box = document.getElementById('teamChatList');
-    if(!box) return;
-
-    let html='';
-    snap.forEach(c=>{
-      const v=c.val();
-      html += `<div><b>${v.email}</b>: ${v.message}</div>`;
-    });
-    box.innerHTML = html;
-  });
-}
-</script>
-
-
     </header>      
     
     <div class="px-4 pt-4 md:hidden" id="mobileSearchWrapper">       
@@ -385,7 +344,7 @@ function loadTeamChat(){
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">           
           <div>            
             <h3 id="boardTitle" class="text-[18px] md:text-[20px] font-semibold text-on-surface">저장 자료</h3>             
-            <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드</p>           
+            <p class="text-[13px] text-on-surface-variant mt-0.5">클라우드 계정 연동 학습 자료 보드 (좌측 ≡ 핸들을 드래그하여 이동)</p>           
           </div>           
           
           <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2">             
@@ -422,7 +381,7 @@ function loadTeamChat(){
       <div class="flex flex-col lg:flex-row lg:items-center justify-between border-b border-ol-variant pb-4 gap-4">         
         <div>           
           <h2 class="text-[22px] font-bold text-primary tracking-tight">💬 캠퍼스 통합 실시간 광장</h2>           
-          <p class="text-[13px] text-on-surface-variant mt-0.5">학우들과 클린하게 소통하고 과목 강의평을 공유하는 독립 공간입니다.</p>         
+          <p class="text-[13px] text-on-surface-variant mt-0.5">학우들과 클린하게 소통하고 과목 강의평을 공유하는 공간입니다.</p>         
         </div>         
         <div class="flex bg-surface-c border border-ol-variant p-1 rounded-lg self-start lg:self-center shadow-2sm">           
           <button onclick="switchCommunityTab('board')" id="tabBtnBoard" class="px-4 py-1.5 text-[13px] font-bold rounded-md bg-primary text-white transition-all">             
@@ -488,6 +447,36 @@ function loadTeamChat(){
     </div>   
   </main>    
   
+  <div id="roomModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm">
+    <div class="bg-surface rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-ol-variant mx-4 flex flex-col">
+      <div class="flex justify-between items-center mb-5 shrink-0 border-b border-ol-variant pb-3">
+        <h3 class="text-[18px] font-bold text-on-surface">🤝 팀 전용 방 연결</h3>
+        <button onclick="closeRoomModal()" class="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-c transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      
+      <div class="flex flex-col gap-5">
+        <div class="bg-surface-c-lowest border border-ol-variant rounded-xl p-4 shadow-sm">
+          <h4 class="text-[14px] font-bold text-primary mb-1">새로운 팀 공간 만들기</h4>
+          <p class="text-[11px] text-on-surface-variant mb-3">우리 조만의 비밀 코드를 생성하고 독립된 공간을 엽니다.</p>
+          <button onclick="createTeamRoom()" class="w-full py-2 bg-primary text-white text-[13px] font-bold rounded-lg hover:opacity-90 transition shadow-sm">새로운 초대 코드 발급</button>
+        </div>
+        
+        <div class="relative flex py-2 items-center">
+          <div class="flex-grow border-t border-ol-variant"></div>
+          <span class="flex-shrink-0 mx-4 text-on-surface-variant text-[12px] font-semibold">또는</span>
+          <div class="flex-grow border-t border-ol-variant"></div>
+        </div>
+
+        <div class="bg-surface-c-lowest border border-ol-variant rounded-xl p-4 shadow-sm">
+          <h4 class="text-[14px] font-bold text-primary mb-1">기존 팀 공간 입장하기</h4>
+          <p class="text-[11px] text-on-surface-variant mb-3">전달받은 6자리 영문/숫자 코드를 입력하세요.</p>
+          <input type="text" id="joinRoomCode" placeholder="예: Ab15lt" maxlength="6" class="w-full px-3 py-2 text-center tracking-[0.2em] font-bold text-[16px] rounded-lg border border-ol-variant bg-surface-c-low text-on-surface focus:outline-none focus:border-primary mb-3 uppercase">
+          <button onclick="joinTeamRoom()" class="w-full py-2 bg-surface-c text-primary border border-primary text-[13px] font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm">입장하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="subjectModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">     
     <div class="bg-surface rounded-xl max-w-sm w-full p-6 shadow-xl border border-ol-variant mx-4">       
       <div class="flex justify-between items-center mb-4">         
@@ -660,6 +649,28 @@ function loadTeamChat(){
       return true;     
     }      
     
+    // --- ✨ 팀 방 상태 조회 유틸리티 ---
+    function getCurrentRoomId() {
+      return localStorage.getItem('currentTeamRoom') || 'public';
+    }
+    function updateRoomUI() {
+      const roomId = getCurrentRoomId();
+      const badge = document.getElementById('roomStatusBadge');
+      const leaveBtn = document.getElementById('leaveRoomBtn');
+      
+      if (roomId === 'public') {
+        badge.innerHTML = `<i data-lucide="user" class="w-3.5 h-3.5"></i> 내 공간`;
+        badge.classList.remove('active');
+        leaveBtn.classList.add('hidden');
+      } else {
+        badge.innerHTML = `<i data-lucide="users" class="w-3.5 h-3.5"></i> 팀 공간: <span class="tracking-widest uppercase ml-1">${roomId}</span>`;
+        badge.classList.add('active');
+        leaveBtn.classList.remove('hidden');
+      }
+      if(window.lucide) lucide.createIcons();
+    }
+    // ---------------------------------
+
     let currentUser = null;     
     let subjects = [];     
     let data = [];     
@@ -776,6 +787,7 @@ function loadTeamChat(){
       { id: 106, title: 'QuizN', desc: 'Quiz', icon: 'quiz', link: 'https://quizn.show/' }
     ];
 
+    // ✨ Firebase DB에서 데이터 읽기 로직 변경 (공용 vs 팀 방)
     auth.onAuthStateChanged(user => {       
       const authContainer = document.getElementById('authContainer');       
       const userStatusBtn = document.getElementById('userStatusBtn');       
@@ -788,7 +800,12 @@ function loadTeamChat(){
           userEmailDisplay.classList.remove('hidden');           
           userEmailDisplay.innerText = `👤 ${user.email.split('@')[0]} 님`;         
         }          
-        database.ref('users/' + user.uid).once('value').then(snapshot => {           
+        updateRoomUI(); // 뱃지 UI 세팅
+
+        const roomId = getCurrentRoomId();
+        const dbPath = roomId === 'public' ? `users/${user.uid}` : `rooms/${roomId}`;
+
+        database.ref(dbPath).once('value').then(snapshot => {           
           const val = snapshot.val();           
           if(val) {             
             subjects = val.subjects || []; data = val.data || [];             
@@ -797,7 +814,8 @@ function loadTeamChat(){
             bookmarkOrder = val.bookmarkOrder || [];
             allOrder = val.allOrder || []; 
             etcOrder = val.etcOrder || [];
-          } else {             
+          } else {  
+            // 방이 처음 생성되거나 유저 초기 세팅일 경우 기본값 삽입
             subjects = [...defaultSubjects]; data = [...defaultData];             
             ddayList = [...defaultDDayList]; personalEvents = [];             
             apps = [...defaultApps]; bookmarkOrder = []; allOrder = []; etcOrder = [];
@@ -814,55 +832,105 @@ function loadTeamChat(){
         if (userEmailDisplay) userEmailDisplay.classList.add('hidden');       
       }     
     });      
+
+    // ✨ 모달 제어 함수
+    function openRoomModal() { document.getElementById('roomModal').classList.remove('hidden'); }
+    function closeRoomModal() { 
+      document.getElementById('roomModal').classList.add('hidden'); 
+      document.getElementById('joinRoomCode').value = '';
+    }
+
+    // ✨ 6자리 랜덤 코드 생성 함수
+    function generateRandomCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) { code += chars.charAt(Math.floor(Math.random() * chars.length)); }
+      return code;
+    }
+
+    // ✨ 새로운 팀 방 생성 함수
+    function createTeamRoom() {
+      const newRoomCode = generateRandomCode();
+      
+      // 새 방에 기본 뼈대 데이터 밀어넣기
+      const initialRoomData = {
+        subjects: [], data: [], ddayList: [], personalEvents: [], apps: [...defaultApps]
+      };
+
+      database.ref(`rooms/${newRoomCode}`).set(initialRoomData).then(() => {
+        localStorage.setItem('currentTeamRoom', newRoomCode);
+        alert(`새로운 팀 방이 열렸습니다!\n\n초대 코드: [ ${newRoomCode} ]\n팀원들에게 이 코드를 공유해주세요.`);
+        location.reload(); 
+      }).catch(e => {
+        console.error("방 생성 실패:", e);
+        alert("방 생성 중 오류가 발생했습니다.");
+      });
+    }
+
+    // ✨ 기존 팀 방 입장 함수
+    function joinTeamRoom() {
+      const inputCode = document.getElementById('joinRoomCode').value.trim();
+      if (!inputCode) { alert("초대 코드를 입력해주세요."); return; }
+
+      database.ref(`rooms/${inputCode}`).once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          localStorage.setItem('currentTeamRoom', inputCode);
+          alert(`[ ${inputCode} ] 팀 방에 성공적으로 입장했습니다!`);
+          location.reload();
+        } else {
+          alert("존재하지 않거나 잘못된 코드입니다.");
+        }
+      });
+    }
+
+    // ✨ 방 나가기 함수
+    function leaveTeamRoom() {
+      if (confirm("팀 공간에서 나가 내 개인 공간으로 돌아가시겠습니까?")) {
+        localStorage.removeItem('currentTeamRoom');
+        location.reload();
+      }
+    }
     
-    // --- ✅ 딜레이 없는 손잡이(Handle) 전용 드래그 & 완벽한 뷰별 독립 정렬 함수 ---
+    // --- 딜레이 없는 손잡이(Handle) 전용 드래그 & 완벽한 뷰별 독립 정렬 함수 ---
     function initCardSortable() {
       if (typeof Sortable === 'undefined') return;
       if (currentMode === 'community') return;
 
       document.querySelectorAll('.card-list').forEach(el => {
         new Sortable(el, {
-          // 모드별로 완전히 그룹을 분리하여 다른 뷰의 정렬 상태가 서로 섞이는 것을 차단
           group: currentMode, 
           handle: '.drag-handle', // 꾹 누를 필요 없이 좌측 점선 핸들을 잡고 즉시 이동
           animation: 150,
           fallbackTolerance: 5,
           ghostClass: 'sortable-ghost',
           dragClass: 'sortable-drag',
-          forceFallback: true,        // ✅ 드래그 시 스크롤 버그 해결을 위해 강제 폴백 사용
-          scroll: true,               // ✅ 스크롤 활성화
-          scrollSensitivity: 80,      // ✅ 가장자리 80px 내에서 스크롤 시작
-          bubbleScroll: true,         // ✅ 부모 컨테이너(보드) 스크롤 허용
+          forceFallback: true,        
+          scroll: true,               
+          scrollSensitivity: 80,      
+          bubbleScroll: true,         
           onEnd: function (evt) {
-            // ✅ 스크롤 위치 저장 (화면 튕김 방지)
             const boardEl = document.getElementById('board');
             const currentScrollTop = boardEl ? boardEl.scrollTop : 0;
             const currentWindowScroll = window.scrollY || document.documentElement.scrollTop;
 
             if (evt.oldIndex === evt.newIndex && evt.from === evt.to) return;
 
-            // 드래그된 이후 보이는 요소들의 ID 추출
             const visibleIds = Array.from(evt.to.children).map(child => Number(child.getAttribute('data-id'))).filter(Boolean);
 
-            // 1. 즐겨찾기 보관함일 경우: 즐겨찾기 전용 배열(bookmarkOrder)만 업데이트
             if (currentMode === 'bookmark') {
                 updateIndependentOrder(bookmarkOrder, visibleIds);
                 saveCurrentStateToFirebase();
             }
-            // 2. 전체 보기일 경우: 전체보기 전용 배열(allOrder)만 업데이트 (홈 배열은 보호됨)
             else if (currentMode === 'all') {
                 const filterSortEl = document.getElementById('filterSort');
                 if (filterSortEl && filterSortEl.value !== 'custom') filterSortEl.value = 'custom';
-                
                 updateIndependentOrder(allOrder, visibleIds);
                 saveCurrentStateToFirebase();
             }
-            // 3. 기타 참고 자료일 경우: 기타 전용 배열(etcOrder)만 업데이트
             else if (currentMode === 'etc') {
                 updateIndependentOrder(etcOrder, visibleIds);
                 saveCurrentStateToFirebase();
             }
-            // 4. 홈(과목별 보기) 및 과목 단독 보기일 경우: 홈 전용 글로벌 데이터(data) 업데이트
             else {
                 const itemEl = evt.item;
                 const itemId = Number(itemEl.getAttribute('data-id'));
@@ -875,7 +943,6 @@ function loadTeamChat(){
                       data[itemIndex].subject = toKey;
                     }
 
-                    // 화면에 있는 모든 과목 기둥의 카드 순서를 읽어 글로벌 data 배열에 반영
                     const allVisibleIds = [];
                     document.querySelectorAll('.card-list').forEach(list => {
                       Array.from(list.children).forEach(child => {
@@ -907,7 +974,6 @@ function loadTeamChat(){
               renderSubjectDetail(currentMode);
             }
 
-            // ✅ 렌더링 후 스크롤 위치 즉시 복구
             setTimeout(() => {
                 const restoredBoard = document.getElementById('board');
                 if(restoredBoard) restoredBoard.scrollTop = currentScrollTop;
@@ -918,18 +984,14 @@ function loadTeamChat(){
       });
     }
 
-    // 독립 배열 순서 업데이트 헬퍼 함수
     function updateIndependentOrder(targetArray, visibleIds) {
-        // 기존 배열에 없는 새로운 ID가 있다면 추가
         visibleIds.forEach(id => {
             if (!targetArray.includes(id)) targetArray.push(id);
         });
 
-        // 현재 화면에 보이는 아이템들이 targetArray 내에서 차지하던 인덱스들
         const originalPositions = visibleIds.map(id => targetArray.indexOf(id));
         originalPositions.sort((a, b) => a - b);
 
-        // 드래그해서 바뀐 새로운 순서대로, targetArray의 원래 인덱스 위치에 덮어쓰기
         visibleIds.forEach((id, index) => {
             targetArray[originalPositions[index]] = id;
         });
@@ -1050,7 +1112,6 @@ function loadTeamChat(){
          }).then(() => { input.value = ''; });
     }
 
-    // 댓글 및 대댓글 렌더링 HTML 생성 헬퍼
     function renderReplies(basePath, repliesObj, parentKey) {
         let html = '';
         const entries = repliesObj ? Object.entries(repliesObj).sort((a,b) => a[1].timestamp - b[1].timestamp) : [];
@@ -1116,10 +1177,12 @@ function loadTeamChat(){
         return html || '<p class="text-[12px] text-on-surface-variant opacity-60 py-2 text-center">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>';
     }
 
-    // 커뮤니티 피드 렌더링
+    // ✨ 커뮤니티 데이터도 방마다 독립되도록 경로 변경
     let globalCommunityData = null;
     function initGlobalCommunityListeners() {
-        database.ref('global_community').on('value', snap => {
+        const roomId = getCurrentRoomId();
+        const dbPath = roomId === 'public' ? 'global_community' : `rooms/${roomId}/global_community`;
+        database.ref(dbPath).on('value', snap => {
             globalCommunityData = snap.val();
             renderCommunityUI();
         });
@@ -1137,10 +1200,13 @@ function loadTeamChat(){
         }
         const sortedKeys = Object.keys(posts).sort((a,b) => posts[b].timestamp - posts[a].timestamp);
         
+        const roomId = getCurrentRoomId();
+        const basePathPrefix = roomId === 'public' ? 'global_community/' : `rooms/${roomId}/global_community/`;
+
         let htmlBuffer = '';
         sortedKeys.forEach(key => {
             const post = posts[key];
-            const basePath = 'global_community/' + key;
+            const basePath = basePathPrefix + key;
             const isAuthor = currentUser && currentUser.uid === post.uid;
             const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
             
@@ -1193,10 +1259,12 @@ function loadTeamChat(){
         restoreFocus(); 
     }
 
-    // 강의평가 보드 렌더링
+    // ✨ 강의평가 데이터도 방마다 독립되도록 경로 변경
     let globalReviewsData = null;
     function initGlobalReviewListeners() {
-        database.ref('global_reviews').on('value', snap => {
+        const roomId = getCurrentRoomId();
+        const dbPath = roomId === 'public' ? 'global_reviews' : `rooms/${roomId}/global_reviews`;
+        database.ref(dbPath).on('value', snap => {
             globalReviewsData = snap.val();
             renderReviewsUI();
         });
@@ -1229,10 +1297,13 @@ function loadTeamChat(){
                 listContainer.innerHTML = `<p class="text-center text-[13px] text-on-surface-variant py-10 bg-surface-c-lowest border border-dashed border-ol-variant rounded-xl">선택한 과목에 등록된 강의평이 없습니다. ⭐️</p>`;
             }
             
+            const roomId = getCurrentRoomId();
+            const basePathPrefix = roomId === 'public' ? 'global_reviews/' : `rooms/${roomId}/global_reviews/`;
+
             let htmlBuffer = '';
             fKeys.forEach(key => {
                 const rev = reviews[key];
-                const basePath = 'global_reviews/' + key;
+                const basePath = basePathPrefix + key;
                 const isAuthor = currentUser && currentUser.uid === rev.uid;
                 const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
                 
@@ -1335,7 +1406,11 @@ function loadTeamChat(){
       const content = input.value.trim();        
       if (!validateContent(content)) return;        
       const nickname = (currentUser && currentUser.displayName) || currentUser.email.split('@')[0] + ' 학우';       
-      database.ref('global_community').push({         
+      
+      const roomId = getCurrentRoomId();
+      const dbPath = roomId === 'public' ? 'global_community' : `rooms/${roomId}/global_community`;
+
+      database.ref(dbPath).push({         
         uid: currentUser.uid, email: currentUser.email, nickname: nickname, content: content, timestamp: firebase.database.ServerValue.TIMESTAMP       
       }).then(() => { input.value = ''; }).catch(e => alert(e.message));     
     }      
@@ -1346,13 +1421,21 @@ function loadTeamChat(){
       const finalEdited = edited.trim();       
       if(!finalEdited) { alert("공백은 등록 불가합니다."); return; }        
       if (!validateContent(finalEdited)) return;        
-      database.ref('global_community/' + key).update({         
+      
+      const roomId = getCurrentRoomId();
+      const dbPath = roomId === 'public' ? `global_community/${key}` : `rooms/${roomId}/global_community/${key}`;
+
+      database.ref(dbPath).update({         
         content: finalEdited, timestamp: firebase.database.ServerValue.TIMESTAMP       
       }).catch(e => alert(e.message));     
     }      
     
     function deleteCommunityPost(key) {       
-      if(confirm("이 게시글을 삭제하시겠습니까?")) database.ref('global_community/' + key).remove().catch(e => alert(e.message));     
+      if(confirm("이 게시글을 삭제하시겠습니까?")) {
+          const roomId = getCurrentRoomId();
+          const dbPath = roomId === 'public' ? `global_community/${key}` : `rooms/${roomId}/global_community/${key}`;
+          database.ref(dbPath).remove().catch(e => alert(e.message));
+      }     
     }      
     
     function submitLectureReview() {       
@@ -1363,7 +1446,11 @@ function loadTeamChat(){
       const reviewText = textInput.value.trim();        
       if (!validateContent(reviewText)) return;        
       const nickname = (currentUser && currentUser.displayName) || currentUser.email.split('@')[0] + ' 학우';       
-      database.ref('global_reviews').push({         
+      
+      const roomId = getCurrentRoomId();
+      const dbPath = roomId === 'public' ? 'global_reviews' : `rooms/${roomId}/global_reviews`;
+
+      database.ref(dbPath).push({         
         uid: currentUser.uid, email: currentUser.email, nickname: nickname, subject: sub, rating: parseInt(score), reviewText: reviewText, timestamp: firebase.database.ServerValue.TIMESTAMP       
       }).then(() => {         
         textInput.value = ''; alert("⭐️ 강의평가가 등록되었습니다.");       
@@ -1376,12 +1463,17 @@ function loadTeamChat(){
         const finalEdited = edited.trim();
         if(!finalEdited) { alert("공백은 등록 불가합니다."); return; }
         if (!validateContent(finalEdited)) return;
-        database.ref('global_reviews/' + key).update({ reviewText: finalEdited });
+        
+        const roomId = getCurrentRoomId();
+        const dbPath = roomId === 'public' ? `global_reviews/${key}` : `rooms/${roomId}/global_reviews/${key}`;
+        database.ref(dbPath).update({ reviewText: finalEdited });
     }
 
     function deleteLectureReview(key) {       
       if(confirm("이 과목 강의평을 삭제하시겠습니까?")) {
-        database.ref('global_reviews/' + key).remove().catch(e => alert(e.message));
+        const roomId = getCurrentRoomId();
+        const dbPath = roomId === 'public' ? `global_reviews/${key}` : `rooms/${roomId}/global_reviews/${key}`;
+        database.ref(dbPath).remove().catch(e => alert(e.message));
       }     
     }
 
@@ -1392,9 +1484,13 @@ function loadTeamChat(){
       renderReviewsUI();
     }      
     
+    // ✨ 모든 데이터 저장을 방(Room) 유무에 따라 분기 처리
     function saveCurrentStateToFirebase() {       
       if (!currentUser) return;       
-      database.ref('users/' + currentUser.uid).set({ 
+      const roomId = getCurrentRoomId();
+      const dbPath = roomId === 'public' ? `users/${currentUser.uid}` : `rooms/${roomId}`;
+
+      database.ref(dbPath).set({ 
         subjects: subjects, 
         data: data, 
         ddayList: ddayList, 
