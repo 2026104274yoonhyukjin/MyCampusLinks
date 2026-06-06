@@ -268,6 +268,77 @@
           <span class="text-[16px]">🌙</span>         
         </label>       
       </div>     
+
+      <button onclick="openTeamModal()" class="bg-primary text-white px-3 py-2 rounded-lg">
+👥 팀 연결하기
+</button>
+
+<div id="teamModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-xl w-96">
+    <h3 class="font-bold text-lg mb-3">팀 전용 방 연결</h3>
+    <input id="teamCodeInput" placeholder="팀 코드 입력 (예: Ab15lt)"
+      class="w-full border p-2 rounded mb-2">
+    <div class="flex gap-2">
+      <button onclick="createTeamRoom()">방 만들기</button>
+      <button onclick="joinTeamRoom()">입장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentTeamCode = localStorage.getItem('teamCode') || null;
+
+function createTeamRoom(){
+  const code = Math.random().toString(36).substring(2,8);
+  database.ref('teamRooms/'+code).set({
+    createdAt: Date.now()
+  });
+  currentTeamCode = code;
+  localStorage.setItem('teamCode', code);
+  alert('팀 코드 생성 완료: ' + code);
+}
+
+function joinTeamRoom(){
+  const code = document.getElementById('teamCodeInput').value.trim();
+  if(!code) return;
+
+  database.ref('teamRooms/'+code).once('value').then(s=>{
+    if(!s.exists()) return alert('존재하지 않는 팀 코드입니다.');
+
+    currentTeamCode = code;
+    localStorage.setItem('teamCode', code);
+    alert('입장 완료!');
+    loadTeamChat();
+  });
+}
+
+function sendTeamMessage(){
+  if(!currentTeamCode) return;
+
+  database.ref('teamRooms/'+currentTeamCode+'/chat').push({
+    uid: currentUser.uid,
+    email: currentUser.email,
+    message: document.getElementById('teamMsg').value,
+    createdAt: Date.now()
+  });
+}
+
+function loadTeamChat(){
+  database.ref('teamRooms/'+currentTeamCode+'/chat')
+  .on('value', snap=>{
+    const box = document.getElementById('teamChatList');
+    if(!box) return;
+
+    let html='';
+    snap.forEach(c=>{
+      const v=c.val();
+      html += `<div><b>${v.email}</b>: ${v.message}</div>`;
+    });
+    box.innerHTML = html;
+  });
+}
+</script>
+
     </header>      
     
     <div class="px-4 pt-4 md:hidden" id="mobileSearchWrapper">       
