@@ -275,13 +275,13 @@
         
         <div class="flex items-center gap-2 mr-2 border-r border-ol-variant pr-4">
           <span id="roomStatusBadge" class="room-badge">
-            <i data-lucide="user" class="w-3.5 h-3.5"></i> 내 공간
+            <i data-lucide="user" class="w-3.5 h-3.5"></i> 내 개인 공간
           </span>
-          <button onclick="openRoomModal()" class="text-[12px] font-bold px-3 py-1.5 rounded-lg bg-surface-c text-on-surface hover:bg-surface-dim transition-colors shadow-sm" title="독립된 팀 방으로 이동">
+          <button id="teamConnectBtn" onclick="openRoomModal()" class="text-[12px] font-bold px-3 py-1.5 rounded-lg bg-surface-c text-on-surface hover:bg-surface-dim transition-colors shadow-sm" title="독립된 팀 방으로 이동">
             팀 연결
           </button>
-          <button id="leaveRoomBtn" onclick="leaveTeamRoom()" class="hidden text-[12px] font-bold px-3 py-1.5 rounded-lg border border-error text-error hover:bg-error-container transition-colors shadow-sm" title="팀 방에서 나가 내 공간으로 돌아가기">
-            방 나가기
+          <button id="leaveRoomBtn" class="hidden text-[12px] font-bold px-3 py-1.5 rounded-lg border border-error text-error hover:bg-error-container transition-colors shadow-sm" title="팀 방에서 나가 내 공간으로 돌아가기">
+            이 탭 닫기
           </button>
         </div>
 
@@ -457,7 +457,7 @@
       <div class="flex flex-col gap-5">
         <div class="bg-surface-c-lowest border border-ol-variant rounded-xl p-4 shadow-sm">
           <h4 class="text-[14px] font-bold text-primary mb-1">새로운 팀 공간 만들기</h4>
-          <p class="text-[11px] text-on-surface-variant mb-3">우리 조만의 비밀 코드를 생성하고 독립된 공간을 엽니다.</p>
+          <p class="text-[11px] text-on-surface-variant mb-3">우리 조만의 비밀 코드를 생성하고 새 탭에서 독립된 공간을 엽니다.</p>
           <button onclick="createTeamRoom()" class="w-full py-2 bg-primary text-white text-[13px] font-bold rounded-lg hover:opacity-90 transition shadow-sm">새로운 초대 코드 발급</button>
         </div>
         
@@ -471,7 +471,7 @@
           <h4 class="text-[14px] font-bold text-primary mb-1">기존 팀 공간 입장하기</h4>
           <p class="text-[11px] text-on-surface-variant mb-3">전달받은 6자리 영문/숫자 코드를 입력하세요.</p>
           <input type="text" id="joinRoomCode" placeholder="예: Ab15lt" maxlength="6" class="w-full px-3 py-2 text-center tracking-[0.2em] font-bold text-[16px] rounded-lg border border-ol-variant bg-surface-c-low text-on-surface focus:outline-none focus:border-primary mb-3 uppercase">
-          <button onclick="joinTeamRoom()" class="w-full py-2 bg-surface-c text-primary border border-primary text-[13px] font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm">입장하기</button>
+          <button onclick="joinTeamRoom()" class="w-full py-2 bg-surface-c text-primary border border-primary text-[13px] font-bold rounded-lg hover:bg-primary hover:text-white transition shadow-sm">새 탭에서 열기</button>
         </div>
       </div>
     </div>
@@ -649,23 +649,30 @@
       return true;     
     }      
     
-    // --- ✨ 팀 방 상태 조회 유틸리티 ---
+    // --- ✨ URL 파라미터 기반 팀 방 상태 조회 유틸리티 ---
     function getCurrentRoomId() {
-      return localStorage.getItem('currentTeamRoom') || 'public';
+      // URL에서 '?room=코드' 부분을 읽어옴
+      const params = new URLSearchParams(window.location.search);
+      return params.get('room') || 'public';
     }
+
     function updateRoomUI() {
       const roomId = getCurrentRoomId();
       const badge = document.getElementById('roomStatusBadge');
+      const teamConnectBtn = document.getElementById('teamConnectBtn');
       const leaveBtn = document.getElementById('leaveRoomBtn');
       
       if (roomId === 'public') {
-        badge.innerHTML = `<i data-lucide="user" class="w-3.5 h-3.5"></i> 내 공간`;
+        badge.innerHTML = `<i data-lucide="user" class="w-3.5 h-3.5"></i> 내 개인 공간`;
         badge.classList.remove('active');
+        teamConnectBtn.classList.remove('hidden');
         leaveBtn.classList.add('hidden');
       } else {
         badge.innerHTML = `<i data-lucide="users" class="w-3.5 h-3.5"></i> 팀 공간: <span class="tracking-widest uppercase ml-1">${roomId}</span>`;
         badge.classList.add('active');
+        teamConnectBtn.classList.add('hidden');
         leaveBtn.classList.remove('hidden');
+        leaveBtn.onclick = () => window.close(); // 이 탭 닫기 로직으로 변경
       }
       if(window.lucide) lucide.createIcons();
     }
@@ -787,7 +794,7 @@
       { id: 106, title: 'QuizN', desc: 'Quiz', icon: 'quiz', link: 'https://quizn.show/' }
     ];
 
-    // ✨ Firebase DB에서 데이터 읽기 로직 변경 (공용 vs 팀 방)
+    // ✨ URL을 읽어 팀 방/개인 방 데이터를 동적으로 호출
     auth.onAuthStateChanged(user => {       
       const authContainer = document.getElementById('authContainer');       
       const userStatusBtn = document.getElementById('userStatusBtn');       
@@ -840,7 +847,6 @@
       document.getElementById('joinRoomCode').value = '';
     }
 
-    // ✨ 6자리 랜덤 코드 생성 함수
     function generateRandomCode() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let code = '';
@@ -848,47 +854,38 @@
       return code;
     }
 
-    // ✨ 새로운 팀 방 생성 함수
+    // ✨ 새로운 팀 방 생성 함수 (생성 직후 새 탭에서 열기)
     function createTeamRoom() {
       const newRoomCode = generateRandomCode();
-      
-      // 새 방에 기본 뼈대 데이터 밀어넣기
       const initialRoomData = {
         subjects: [], data: [], ddayList: [], personalEvents: [], apps: [...defaultApps]
       };
 
       database.ref(`rooms/${newRoomCode}`).set(initialRoomData).then(() => {
-        localStorage.setItem('currentTeamRoom', newRoomCode);
-        alert(`새로운 팀 방이 열렸습니다!\n\n초대 코드: [ ${newRoomCode} ]\n팀원들에게 이 코드를 공유해주세요.`);
-        location.reload(); 
+        alert(`새로운 팀 방이 생성되었습니다!\n초대 코드: [ ${newRoomCode} ]\n확인을 누르면 새 탭에서 열립니다.`);
+        // 새 탭으로 방 진입
+        window.open(`?room=${newRoomCode}`, '_blank');
+        closeRoomModal();
       }).catch(e => {
         console.error("방 생성 실패:", e);
         alert("방 생성 중 오류가 발생했습니다.");
       });
     }
 
-    // ✨ 기존 팀 방 입장 함수
+    // ✨ 기존 팀 방 입장 함수 (입력된 코드 기반으로 새 탭 열기)
     function joinTeamRoom() {
       const inputCode = document.getElementById('joinRoomCode').value.trim();
       if (!inputCode) { alert("초대 코드를 입력해주세요."); return; }
 
       database.ref(`rooms/${inputCode}`).once('value').then((snapshot) => {
         if (snapshot.exists()) {
-          localStorage.setItem('currentTeamRoom', inputCode);
-          alert(`[ ${inputCode} ] 팀 방에 성공적으로 입장했습니다!`);
-          location.reload();
+          // 새 탭으로 방 진입
+          window.open(`?room=${inputCode}`, '_blank');
+          closeRoomModal();
         } else {
           alert("존재하지 않거나 잘못된 코드입니다.");
         }
       });
-    }
-
-    // ✨ 방 나가기 함수
-    function leaveTeamRoom() {
-      if (confirm("팀 공간에서 나가 내 개인 공간으로 돌아가시겠습니까?")) {
-        localStorage.removeItem('currentTeamRoom');
-        location.reload();
-      }
     }
     
     // --- 딜레이 없는 손잡이(Handle) 전용 드래그 & 완벽한 뷰별 독립 정렬 함수 ---
