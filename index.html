@@ -74,10 +74,8 @@
 
   /* 4. body 자체의 가로 스크롤 완전 차단 */
   body {
-    overflow-x: hidden !important;
-    width: 100vw !important;
-  }
-
+    overflow-x: auto !important;
+}
     :root {       
       --surface: #f8f9ff; --surface-dim: #ccdbf3; --surface-c-lowest: #ffffff;       
       --surface-c-low: #eff4ff; --surface-c: #e6eeff; --surface-c-high: #dce9ff;       
@@ -181,7 +179,17 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ol-variant); border-radius: 8px; border: 2px solid var(--surface); }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-    
+    /* 메인 영역을 더 넓게 사용 */
+#mainDashboardContent,
+#mainCommunityContent {
+    max-width: 1800px !important;
+    width: calc(100vw - 280px) !important;
+}
+
+/* 카드 영역도 꽉 차게 */
+#board {
+    max-width: none !important;
+}
   </style> 
 
 <script src="https://unpkg.com/lucide@latest"></script>
