@@ -49,13 +49,7 @@
     }   
   </script>   
   
-  <style>  
-  
- /* 1. 드래그 중인 카드(Ghost)가 레이아웃을 망치지 않게 고정 */
-  .sortable-ghost {
-    opacity: 0.4 !important;
-    border: 2px dashed #ccc !important;
-  }
+  <style> 
 
   /* 2. 드래그되고 있는 카드(Drag) 스타일: 너비 고정 */
   .sortable-drag {
@@ -72,10 +66,6 @@
     overflow-x: hidden !important; /* 가로 스크롤바 원천 차단 */
   }
 
-  /* 4. body 자체의 가로 스크롤 완전 차단 */
-  body {
-    overflow-x: auto !important;
-}
     :root {       
       --surface: #f8f9ff; --surface-dim: #ccdbf3; --surface-c-lowest: #ffffff;       
       --surface-c-low: #eff4ff; --surface-c: #e6eeff; --surface-c-high: #dce9ff;       
@@ -159,11 +149,7 @@
       letter-spacing: -0.04em;
     }
 
-    
-  /* 드래그 중인 요소가 강제로 스크롤 위치를 건드리지 않게 함 */
-  .sortable-ghost {
-    opacity: 0.4;
-  }
+  
   
   /* 부모 컨테이너가 드래그 중에도 높이를 유지하도록 설정 */
   .overflow-y-auto {
@@ -190,35 +176,46 @@
 #board {
     max-width: none !important;
 }
-
-/* 1. 배경 설정 */
+/* 1. 배경 설정: 연한 회색 배경으로 깔끔하게 */
   body {
-    background-color: #f3f4f6; /* 회색톤 배경 */
+    background-color: #f3f4f6; 
     margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  /* 2. 전체를 감싸는 Wrapper: 90% 너비 + 중앙 정렬 */
+  .main-wrapper {
+    width: 92%;
+    max-width: 1400px;
+    margin: 40px auto; /* 위아래 여백을 40px 주어 답답함을 해소 */
     padding: 0;
   }
 
-  /* 2. 이게 핵심: 전체 화면의 90%만 차지하게 하고 중앙으로 배치 */
-  .main-wrapper {
-    width: 92%;           /* 좌우에 약 4%씩 여백이 생김 */
-    max-width: 1400px;    /* 너무 넓어지는 것 방지 */
-    margin: 40px auto;    /* 위아래 40px 여백, 좌우 중앙 정렬 */
-  }
-
-  /* 3. 카드 리스트 자체의 간격 조절 */
+  /* 3. 카드 리스트: 카드들이 예쁘게 배열되도록 Grid 적용 */
   .card-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;            /* 카드들 사이의 적절한 간격 */
-    padding: 10px;
+    gap: 24px;
+    padding-bottom: 50px;
+  }
+
+  /* 4. 가로 스크롤바 방지 */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* 5. 드래그 중인 카드(Ghost)가 화면을 깨뜨리지 않게 함 */
+  .sortable-ghost {
+    opacity: 0.4;
+    border: 2px dashed #999;
   }
   </style> 
 
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>  
 <body class="font-inter bg-surface text-on-surface min-h-screen">    
-<div class="main-wrapper">
-     </div>
+
   <div id="authContainer" class="fixed inset-0 z-50 bg-surface flex items-center justify-center hidden">     
     <div class="bg-surface-c-low border border-ol-variant rounded-xl max-w-sm w-full p-8 shadow-xl mx-4 flex flex-col gap-4">       
       <div class="text-center mb-2">         
@@ -847,37 +844,27 @@
       if (currentMode === 'community') return;
 
      document.querySelectorAll('.card-list').forEach(el => {
-        new Sortable(el, {
-          group: currentMode,
-          handle: '.drag-handle',
-          animation: 150,
-          ghostClass: 'sortable-ghost',
-          dragClass: 'sortable-drag',
-          forceFallback: true,        // 🔥 핵심: 브라우저 기본 드래그 기능 완전 차단
-          fallbackOnBody: true,       // 🔥 핵심: 드래그 시 레이아웃 꼬임 방지
-          scroll: false,              // 🔥 중요: 스크롤 자동 이동이 튕김의 원인일 수 있으므로 일단 false
-          
-          onStart: function(evt) {
-            // 드래그 시작 시 가로 스크롤 방지 클래스 추가
-            document.body.style.overflowX = 'hidden';
-          },
-          onEnd: function (evt) {
-            // 드래그 종료 시 원복
-            document.body.style.overflowX = 'auto';
-            
-            // ... (기존 순서 변경 로직) ...
-            
-            saveCurrentStateToFirebase();
-        
+      new Sortable(el, {
+  group: currentMode,
+  handle: '.drag-handle',
+  animation: 150,
+  forceFallback: true,      // 레이아웃 꼬임 방지
+  fallbackOnBody: true,     // 바디 기준으로 드래그 처리
+  ghostClass: 'sortable-ghost',
+  dragClass: 'sortable-drag',
+  
+  onEnd: function (evt) {
+    if (evt.oldIndex === evt.newIndex && evt.from === evt.to) return;
+    
+    // ... 기존 데이터 처리 로직 ...
+    
+    saveCurrentStateToFirebase();
+    // [삭제]: render() 함수를 여기서 부르지 마세요!
             
             // ... (기존에 쓰던 배열 위치 변경 로직 유지) ...
             // [중요] 여기서 render() 함수 호출을 삭제하세요!
             
-            // 3. 데이터만 Firebase에 저장
-            saveCurrentStateToFirebase();
-            
-            // 🔥 절대 render() 또는 renderSubjectDetail()을 호출하지 마세요.
-            // 화면 렌더링은 이미 SortableJS가 끝낸 상태입니다.
+          
           
             const visibleIds = Array.from(evt.to.children).map(child => Number(child.getAttribute('data-id'))).filter(Boolean);
 
@@ -2436,6 +2423,8 @@
   if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 </script>
+
+  <div class="main-wrapper"> </div>
 </body>
  
 </html>
