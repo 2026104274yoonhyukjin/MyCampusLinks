@@ -51,6 +51,22 @@
   
   <style> 
 
+  body {
+  background-color: #f3f4f6; /* 배경은 body에 그대로 유지 */
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden; /* 축소 후 생길 수 있는 가로 스크롤 방지 */
+}
+
+/* 전체 콘텐츠를 감싸는 div (예를 들어 id="app-container" 라고 가정) */
+#app-container {  
+  transform: scale(0.9);
+  transform-origin: top center; /* 기준점을 '위쪽 중앙'으로 설정하여 여백이 양옆으로 균일하게 늘어나도록 함 */
+  width: 100%;
+}
+
+
   /* 2. 드래그되고 있는 카드(Drag) 스타일: 너비 고정 */
   .sortable-drag {
     opacity: 1 !important;
@@ -176,13 +192,6 @@
 #board {
     max-width: none !important;
 }
-/* 1. 배경 설정: 연한 회색 배경으로 깔끔하게 */
-  body {
-    background-color: #f3f4f6; 
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-  }
 
   /* 2. 전체를 감싸는 Wrapper: 90% 너비 + 중앙 정렬 */
   .main-wrapper {
