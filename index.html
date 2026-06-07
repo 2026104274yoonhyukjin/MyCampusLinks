@@ -50,38 +50,66 @@
   </script>   
   
   <style> 
+/* 1. 화면 밀림 방지 및 세로 스크롤바 제어 */
+html {
+  background-color: var(--surface);
+  /* 스크롤바가 생겨도 레이아웃이 덜컹거리지 않게 고정 */
+  scrollbar-gutter: stable; 
+}
 
-  body {
-  background-color: #f3f4f6; /* 배경은 body에 그대로 유지 */
+body {
+  zoom: 0.85; /* 85% 축소 */
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  overflow-x: hidden; /* 축소 후 생길 수 있는 가로 스크롤 방지 */
+  /* 세로 스크롤바가 강제로 생기는 것을 방지 */
+  overflow-y: auto; 
+  overflow-x: hidden;
+  background-color: transparent;
 }
 
-/* 전체 콘텐츠를 감싸는 div (예를 들어 id="app-container" 라고 가정) */
-#app-container {  
-  transform: scale(0.9);
-  transform-origin: top center; /* 기준점을 '위쪽 중앙'으로 설정하여 여백이 양옆으로 균일하게 늘어나도록 함 */
-  width: 100%;
+/* 2. 캘린더 날짜 클릭 시 크기 변화 방지 */
+/* 날짜 셀의 테두리가 생겨서 커지는 것을 막음 */
+.calendar-days {
+  box-sizing: border-box !important;
+  /* 테두리 대신 그림자(box-shadow)를 사용하면 크기가 변하지 않음 */
+  border: 1px solid transparent !important; 
 }
 
+.calendar-days.selected {
+  /* border 대신 outline이나 shadow를 사용하여 크기 고정 */
+  outline: 2px solid var(--primary) !important;
+  outline-offset: -2px;
+}
 
-  /* 2. 드래그되고 있는 카드(Drag) 스타일: 너비 고정 */
-  .sortable-drag {
-    opacity: 1 !important;
-    background: white !important;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
-    width: 300px !important; /* 여기서 카드 너비를 고정하세요 (본인 카드 너비에 맞게) */
-    transform: rotate(0deg) !important;
-  }
+    /* 2. 메인 콘텐츠 넓이 제한 (3번째 사진처럼 양옆에 예쁜 여백을 주기 위함) */
+    #mainDashboardContent,
+    #mainCommunityContent {
+        max-width: 1450px !important; /* 기존 1800px에서 줄여서 카드가 찢어지듯 늘어나는 것 방지 */
+        margin: 0 auto !important; /* 화면 중앙 정렬 */
+        width: 96% !important; 
+    }
 
-  /* 3. 리스트 컨테이너가 드래그 때문에 늘어나지 않게 방지 */
-  .card-list {
-    min-height: 50px;
-    overflow-x: hidden !important; /* 가로 스크롤바 원천 차단 */
-  }
+    #board {
+        max-width: none !important;
+    }
 
+    /* 3. 드래그되고 있는 카드(Drag) 스타일 */
+    .sortable-drag {
+      opacity: 1 !important;
+      background: white !important;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+      width: 300px !important; 
+      transform: rotate(0deg) !important;
+    }
+
+    /* 4. 리스트 컨테이너가 드래그 때문에 늘어나지 않게 방지 */
+    .card-list {
+      min-height: 50px;
+      overflow-x: hidden !important; 
+    }
+
+    /* 5. 기타 UI 색상 변수 세팅 */
     :root {       
       --surface: #f8f9ff; --surface-dim: #ccdbf3; --surface-c-lowest: #ffffff;       
       --surface-c-low: #eff4ff; --surface-c: #e6eeff; --surface-c-high: #dce9ff;       
@@ -164,62 +192,18 @@
       font-weight: 800;
       letter-spacing: -0.04em;
     }
-
   
-  
-  /* 부모 컨테이너가 드래그 중에도 높이를 유지하도록 설정 */
-  .overflow-y-auto {
-    will-change: transform;
-    /* 스크롤 튕김 현상을 완화합니다 */
-    -webkit-overflow-scrolling: touch;
-  }
+    .overflow-y-auto {
+      will-change: transform;
+      -webkit-overflow-scrolling: touch;
+    }
 
-
-    /* 커스텀 스크롤바 */
+    /* 커스텀 스크롤바 설정 */
     .custom-scrollbar::-webkit-scrollbar { width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ol-variant); border-radius: 8px; border: 2px solid var(--surface); }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-    /* 메인 영역을 더 넓게 사용 */
-#mainDashboardContent,
-#mainCommunityContent {
-    max-width: 1800px !important;
-    width: calc(100vw - 280px) !important;
-}
-
-/* 카드 영역도 꽉 차게 */
-#board {
-    max-width: none !important;
-}
-
-  /* 2. 전체를 감싸는 Wrapper: 90% 너비 + 중앙 정렬 */
-  .main-wrapper {
-    width: 92%;
-    max-width: 1400px;
-    margin: 40px auto; /* 위아래 여백을 40px 주어 답답함을 해소 */
-    padding: 0;
-  }
-
-  /* 3. 카드 리스트: 카드들이 예쁘게 배열되도록 Grid 적용 */
-  .card-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
-    padding-bottom: 50px;
-  }
-
-  /* 4. 가로 스크롤바 방지 */
-  html, body {
-    overflow-x: hidden;
-  }
-
-  /* 5. 드래그 중인 카드(Ghost)가 화면을 깨뜨리지 않게 함 */
-  .sortable-ghost {
-    opacity: 0.4;
-    border: 2px dashed #999;
-  }
-  </style> 
+  </style>
 
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>  
