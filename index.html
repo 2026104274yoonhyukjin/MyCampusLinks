@@ -190,12 +190,35 @@
 #board {
     max-width: none !important;
 }
+
+/* 1. 배경 설정 */
+  body {
+    background-color: #f3f4f6; /* 회색톤 배경 */
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 2. 이게 핵심: 전체 화면의 90%만 차지하게 하고 중앙으로 배치 */
+  .main-wrapper {
+    width: 92%;           /* 좌우에 약 4%씩 여백이 생김 */
+    max-width: 1400px;    /* 너무 넓어지는 것 방지 */
+    margin: 40px auto;    /* 위아래 40px 여백, 좌우 중앙 정렬 */
+  }
+
+  /* 3. 카드 리스트 자체의 간격 조절 */
+  .card-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;            /* 카드들 사이의 적절한 간격 */
+    padding: 10px;
+  }
   </style> 
 
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>  
 <body class="font-inter bg-surface text-on-surface min-h-screen">    
-
+<div class="main-wrapper">
+     </div>
   <div id="authContainer" class="fixed inset-0 z-50 bg-surface flex items-center justify-center hidden">     
     <div class="bg-surface-c-low border border-ol-variant rounded-xl max-w-sm w-full p-8 shadow-xl mx-4 flex flex-col gap-4">       
       <div class="text-center mb-2">         
