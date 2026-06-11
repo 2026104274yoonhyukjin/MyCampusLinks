@@ -780,8 +780,7 @@ body {
 
     let globalEtcData = [
       { id: 9001, title: "딥링크 설정 가이드 (프로그램 원클릭 실행법)", subject: "가이드", week: "상시", link: "pdf/딥링크_설정_가이드.pdf", type: 'file' },
-      { id: 9002, title: "프론트엔드프로그래밍 OT 자료", subject: "수업자료", week: "상시", link: "https://dayoung-univ.github.io/Frontend2026-01/OT", type: 'web' },
-      { id: 9003, title: "마크다운 작성방법 참고자료", subject: "수업자료", week: "상시", link: "pdf/마크다운_보충자료.pdf", type: 'file' }
+     
     ];
 
     const defaultDDayList = [{ id: 1001, title: "기말고사 및 종강", date: "2026-06-15" }];
@@ -1683,7 +1682,20 @@ body {
       });     
     }      
     
-    function handleSearch(isMobile = false) {       
+    
+      function handleSearch(isMobile = false) {
+    // 1. 검색어 가져오기 및 전역 변수 업데이트
+    const inputId = isMobile ? 'mobileSearchInput' : 'searchInput';
+    const inputElement = document.getElementById(inputId);
+    
+    if (!inputElement) return;
+    
+    searchQuery = inputElement.value.toLowerCase().trim();
+
+    // 2. 검색창에 입력할 때마다 즉시 현재 모드의 화면을 다시 렌더링
+    // (여기서 currentMode가 'bookmark'일 때도 정상적으로 호출되어야 합니다)
+    render(currentMode); 
+
       searchQuery = document.getElementById(isMobile ? 'mobileSearchInput' : 'searchInput').value.toLowerCase().trim();       
       if(currentMode !== 'community' && currentMode !== 'etc' && currentMode !== 'bookmark') render(currentMode);     
     }      
@@ -1833,6 +1845,27 @@ body {
 
     function render(mode) {       
       currentMode = mode;       
+      if (mode === 'bookmark') {
+        // 1. 전체 데이터 중 즐겨찾기 된 데이터만 불러오기 (예시)
+        // bookmarkOrder 배열에 있는 id를 기반으로 데이터를 가져온다고 가정
+        let filteredData = bookmarkOrder.map(id => data.find(d => d.id === id)).filter(Boolean);
+
+        // 2. 핵심 해결 부분: 검색어(searchQuery)가 존재하면 실시간으로 필터링 적용
+        if (searchQuery !== '') {
+            filteredData = filteredData.filter(item => 
+                (item.title && item.title.toLowerCase().includes(searchQuery)) ||
+                (item.subject && item.subject.toLowerCase().includes(searchQuery))
+            );
+        }
+
+        // 3. 필터링된 데이터를 바탕으로 화면에 카드 리스트 그리기
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        
+        filteredData.forEach(item => {
+            // ... 카드 HTML 생성 및 board.innerHTML += 추가 코드 ...
+        });
+    }
       const dashView = document.getElementById('mainDashboardContent'); 
       const commView = document.getElementById('mainCommunityContent');       
       const hSearch = document.getElementById('headerSearchWrapper'); 
