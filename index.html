@@ -311,6 +311,7 @@ body {
         </div>       
       </div>       
       
+      
       <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-ol-variant">         
         <button onclick="openCalendarModal()" class="bg-primary text-white text-[13px] font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition shadow-sm">           
           <i data-lucide="calendar-days" class="w-4 h-4"></i> 학사 달력         
@@ -644,7 +645,7 @@ body {
         <div class="grid grid-cols-7 gap-1 text-center font-bold text-[11px] text-on-surface-variant uppercase mb-2 shrink-0">         
           <div class="text-red-500">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-500">토</div>       
         </div>       
-        <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>       
+     <div id="calendarGrid" class="grid grid-cols-7 gap-1 pb-3"></div>     
       </div>     
       <div id="calendarDetailsBox" class="border-t border-ol-variant mt-4 pt-3 hidden">         
         <div class="flex justify-between items-center mb-2">           
@@ -762,7 +763,7 @@ body {
       { id: 30, title: "8장-클래스의 외부 구성요소", week: "8주차", subject: "객체 지향 프로그래밍", link: "pdf/8장_클래스의_외부_구성요소_(package_import_외부클래스).pdf", type: "file" },
       { id: 31, title: "9장-자바제어자(modifier)_1", week: "9주차", subject: "객체 지향 프로그래밍", link: "pdf/9장__자바제어자(modifier)_1._(접근지정자_static).pdf", type: "file" },
       
-      { id: 32, title: "OT 자료", week: "상시", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT", type: "web" },
+      { id: 32, title: "프론트엔드프로그래밍 OT 자료", week: "상시", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/OT", type: "web" },
       { id: 33, title: "마크다운 작성방법 참고자료", week: "상시", subject: "프론트엔드프로그래밍", link: "pdf/마크다운_보충자료.pdf", type: "file" },
       { id: 34, title: "3주차 수업 자료-HTML Form & UI", week: "3주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week3", type: "web" },
       { id: 35, title: "4주차 수업 자료-CSS 스타일링 & GitHub 배포", week: "4주차", subject: "프론트엔드프로그래밍", link: "https://dayoung-univ.github.io/Frontend2026-01/week4", type: "web" },
@@ -790,7 +791,8 @@ body {
       { id: 103, title: 'Eclipse', desc: 'Java IDE', icon: 'eclipse', link: 'C:\\eclipse\\eclipse.exe' },
       { id: 104, title: 'VS Code', desc: 'Web / Editor', icon: 'vscode', link: 'C:\\Users\\User\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe' },
       { id: 105, title: 'MarkText', desc: 'Markdown Editor', icon: 'marktext', link: 'marktext://' },
-      { id: 106, title: 'QuizN', desc: 'Quiz', icon: 'quiz', link: 'https://quizn.show/' }
+      { id: 106, title: 'QuizN', desc: 'Quiz', icon: 'quiz', link: 'https://quizn.show/' },
+      { id: 107, title: 'Github', desc: 'Git Repo', icon: 'github', link: 'https://github.com/'}
     ];
 
     auth.onAuthStateChanged(user => {       
@@ -1699,38 +1701,53 @@ body {
       }
     }
 
-    // 북마크 토글 로직 
+   // 북마크 토글 로직 (링크가 같은 중복 자료 완벽 동기화)
     function toggleBookmark(id, event) {
       if (event) {
         event.stopPropagation();
         event.preventDefault();
       }
-      const itemIndex = data.findIndex(x => x.id == id);
-      if (itemIndex === -1) return;
 
-      data[itemIndex].bookmark = !data[itemIndex].bookmark;
-      
-      if (data[itemIndex].bookmark) {
-        if (!bookmarkOrder.includes(id)) bookmarkOrder.push(id);
-      } else {
-        bookmarkOrder = bookmarkOrder.filter(x => x != id);
-      }
+      // 1. 클릭한 아이템 찾기
+      let clickedItem = data.find(x => x.id == id) || globalEtcData.find(x => x.id == id);
+      if (!clickedItem) return;
+
+      // 2. 현재 즐겨찾기 상태 확인 후 반전
+      const isCurrentlyBookmarked = bookmarkOrder.includes(id);
+      const newState = !isCurrentlyBookmarked;
+
+      // 3. (핵심) 링크가 똑같은 항목들(예: 홈의 OT자료와 기타의 OT자료) 모두 찾기
+      const targetLink = clickedItem.link;
+      const matchingIds = [];
+      data.forEach(x => { if (x.link === targetLink) matchingIds.push(x.id); });
+      globalEtcData.forEach(x => { if (x.link === targetLink) matchingIds.push(x.id); });
+
+      // 4. 찾은 모든 항목의 상태를 한꺼번에 변경하고 화면에 반영
+      matchingIds.forEach(mId => {
+        let mItem = data.find(x => x.id == mId) || globalEtcData.find(x => x.id == mId);
+        if (mItem) mItem.bookmark = newState;
+
+        if (newState) {
+          if (!bookmarkOrder.includes(mId)) bookmarkOrder.push(mId);
+        } else {
+          bookmarkOrder = bookmarkOrder.filter(x => x != mId);
+        }
+
+        // 화면 상의 별 아이콘 즉시 동기화
+        const cardElements = document.querySelectorAll(`[data-id="${mId}"]`);
+        cardElements.forEach(cardEl => {
+          const btn = cardEl.querySelector('button[title="즐겨찾기"]');
+          if (btn) {
+            btn.innerHTML = newState ? '⭐️' : '☆';
+            btn.className = 'relative z-10 text-[14px] p-1 rounded transition-transform ' + (newState ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110');
+          }
+        });
+      });
+
       saveCurrentStateToFirebase();
 
       if (currentMode === 'bookmark') {
         render('bookmark');
-        return; 
-      }
-
-      const cardElement = document.querySelector(`[data-id="${id}"]`);
-      if (!cardElement) return;
-
-      const bookmarkBtn = cardElement.querySelector('button[title="즐겨찾기"]');
-      if (bookmarkBtn) {
-        const starIcon = data[itemIndex].bookmark ? '⭐️' : '☆';
-        const starClass = data[itemIndex].bookmark ? 'text-yellow-500 opacity-100 hover:scale-110' : 'text-on-surface-variant opacity-40 hover:opacity-100 hover:scale-110';
-        bookmarkBtn.innerHTML = starIcon;
-        bookmarkBtn.className = 'relative z-10 text-[14px] p-1 rounded transition-transform ' + starClass;
       }
     }
 
@@ -1907,9 +1924,9 @@ body {
             return idxA - idxB;
         });
 
-        localEtc.forEach(item => {
-          // 북마크 상태 매핑용 가짜 오브젝트 (실제 data 배열엔 없으므로)
-          const dummyItem = { ...item, bookmark: false };
+       localEtc.forEach(item => {
+          // 북마크 상태 매핑용 가짜 오브젝트 (저장된 즐겨찾기 배열을 확인하도록 수정)
+          const dummyItem = { ...item, bookmark: bookmarkOrder.includes(item.id) };
           html += createCardHtml(dummyItem, true);
         });
         html += `</div>`;
@@ -1934,7 +1951,21 @@ body {
 
         boardTitle.innerText = "⭐ 즐겨찾기 보관함 (좌측 ≡ 핸들을 드래그하여 이동)";
         
-        const bookmarkedOnly = filtered.filter(item => item.bookmark);
+        // 1. data와 globalEtcData 양쪽에서 즐겨찾기 된 항목 모두 불러오기
+        let bookmarkedOnly = bookmarkOrder.map(id => {
+          let found = data.find(x => x.id == id) || globalEtcData.find(x => x.id == id);
+          return found ? { ...found, bookmark: true } : null;
+        }).filter(Boolean);
+
+        // 2. 검색창에 검색어가 있다면 실시간 필터링 적용
+        if (searchQuery) {
+          bookmarkedOnly = bookmarkedOnly.filter(item => 
+            (item.title && item.title.toLowerCase().includes(searchQuery)) ||
+            (item.subject && item.subject.toLowerCase().includes(searchQuery)) ||
+            (item.week && item.week.toLowerCase().includes(searchQuery)) ||
+            (item.desc && item.desc.toLowerCase().includes(searchQuery))
+          );
+        }
 
         if (window.currentBookmarkSubject !== 'all' && !bookmarkedOnly.some(item => item.subject === window.currentBookmarkSubject)) {
             window.currentBookmarkSubject = 'all';
@@ -2223,7 +2254,7 @@ body {
         else if(weekday === 6) colorClass = "text-blue-500 font-bold";          
         if(activeEvents.length > 0) bgClass = "bg-primary-fixed/60 font-bold text-primary";                  
         let dot = hasCustom ? `<span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-amber-500 rounded-full"></span>` : '';         
-        const isSelected = selectedDateStr === fullDateStr ? 'border-2 border-primary shadow-md scale-105 z-5' : 'border border-ol-variant/30';          
+const isSelected = selectedDateStr === fullDateStr ? 'border-transparent ring-2 ring-primary ring-inset shadow-md z-10' : 'border border-ol-variant/30';         
         let holidayNameHtml = isHoliday ? `<div class="text-[9px] text-red-500 mt-0.5 truncate w-full px-0.5">${isHoliday}</div>` : '';          
         grid.innerHTML += `           
           <div onclick="showDateDetails('${fullDateStr}')" class="p-1 rounded-lg text-center text-[12px] relative cursor-pointer min-h-[46px] flex flex-col items-center justify-center ${bgClass} ${colorClass} ${isSelected}">             
